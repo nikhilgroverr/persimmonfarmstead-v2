@@ -29,14 +29,14 @@ const cardVariants = {
     y: 0,
     scale: 1,
     filter: "blur(0px)",
-    transition: { duration: 0.8, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.8, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] as const },
   }),
   exit: (i: number) => ({
     opacity: 0,
     y: -30,
     scale: 0.96,
     filter: "blur(4px)",
-    transition: { duration: 0.5, delay: i * 0.05, ease: [0.4, 0, 1, 1] },
+    transition: { duration: 0.5, delay: i * 0.05, ease: [0.4, 0, 1, 1] as const },
   }),
 };
 
