@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-terracotta: #243028;
+  --color-terracotta-dark: #1a2420;
+  --color-cream: #ede4d0;
+  --color-cream-soft: #f7f2e8;
+  --color-accent: #d4a853;
+  --color-ink: #1a2218;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream-soft);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
