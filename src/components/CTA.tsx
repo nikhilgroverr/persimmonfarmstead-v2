@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Reveal from "./Reveal";
+import { primaryPhone, telHref, mailtoHref } from "@/lib/site";
 
 export default function CTA() {
   return (
@@ -49,7 +50,7 @@ export default function CTA() {
         <Reveal delay={0.3}>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <motion.a
-              href="tel:+91 9999975545"
+              href={telHref(primaryPhone.raw)}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center gap-3 rounded-full bg-terracotta text-cream font-body text-sm tracking-wide uppercase px-8 py-4 transition-colors duration-300 hover:bg-terracotta-dark"
@@ -61,7 +62,7 @@ export default function CTA() {
             </motion.a>
 
             <a
-              href="mailto:reservations@persimmonfarmstead.com​"
+              href={mailtoHref("Booking enquiry — Persimmon Farmstead")}
               className="inline-flex items-center gap-2.5 font-body text-sm tracking-wide uppercase text-cream/80 border border-cream/30 rounded-full px-8 py-4 transition-all duration-300 hover:border-cream/60 hover:text-cream"
             >
               Email us

@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 
 const categories = [
@@ -132,12 +133,14 @@ export default function AmenitiesPage() {
           Ready to experience it for yourself?
         </p>
         <a
-          href="#contact"
+          href="/contact#form"
           className="inline-flex items-center gap-3 rounded-full bg-terracotta text-cream font-body text-sm tracking-wide uppercase px-7 py-3 hover:bg-terracotta-dark transition-colors"
         >
           Book your stay
         </a>
       </section>
+
+      <Footer />
     </main>
   );
 }

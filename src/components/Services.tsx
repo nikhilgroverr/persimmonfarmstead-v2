@@ -5,7 +5,7 @@ import Reveal from "./Reveal";
 export default function Services() {
   return (
     <section
-      id="amenities"
+      id="services"
       className="relative w-full bg-cream-soft py-24 md:py-32 px-6 overflow-hidden"
     >
       <div className="relative max-w-6xl mx-auto">

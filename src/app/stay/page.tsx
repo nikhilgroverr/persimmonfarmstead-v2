@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Stays from "@/components/Stays";
+import PropertyShowcase from "@/components/PropertyShowcase";
 
 export default function StayPage() {
   return (
@@ -26,7 +26,7 @@ export default function StayPage() {
         </div>
       </section>
 
-      <Stays />
+      <PropertyShowcase />
 
       <Footer />
     </main>

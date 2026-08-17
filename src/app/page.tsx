@@ -1,11 +1,10 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Welcome from "@/components/Welcome";
-import Story from "@/components/Story";
+import PropertyShowcase from "@/components/PropertyShowcase";
 import KitchenArticleSection from "@/components/KitchenArticleSection";
 import ValleyBaseSection from "@/components/ValleyBaseSection";
 import Services from "@/components/Services";
-import Stays from "@/components/Stays";
 import Amenities from "@/components/Amenities";
 import GallerySection from "@/components/GallerySection";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -20,12 +19,11 @@ export default function Home() {
     <main>
       <Navbar />
       <Hero />
+      <PropertyShowcase />
       <Welcome />
-      <Story />
       <KitchenArticleSection />
       <ValleyBaseSection />
       <Services />
-      <Stays />
       <Amenities />
       <GallerySection />
       <TestimonialsSection />
