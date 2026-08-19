@@ -88,6 +88,48 @@ function useTilt(max = 9, softness = { stiffness: 150, damping: 18 }) {
   return { reduce, rotateX, rotateY, glare, onMove, onLeave };
 }
 
+/* ── Top scroll-progress bar ── */
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 z-[60] h-[3px] origin-left"
+      style={{ scaleX, background: "linear-gradient(to right, #d4a853, #b5703f)" }}
+      aria-hidden
+    />
+  );
+}
+
+/* ── Big outlined word that drifts on scroll (section depth) ── */
+function ParallaxGhost({ text, align = "right" }: { text: string; align?: "left" | "right" }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const reduce = useReducedMotion();
+  const y = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [90, -90]);
+  return (
+    <div ref={ref} aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+      <motion.span
+        className="font-display italic select-none absolute whitespace-nowrap"
+        style={{
+          y,
+          top: "4%",
+          right: align === "right" ? "-2%" : undefined,
+          left: align === "left" ? "-2%" : undefined,
+          fontSize: "clamp(90px, 16vw, 260px)",
+          fontWeight: 300,
+          letterSpacing: "-0.04em",
+          color: "transparent",
+          WebkitTextStroke: "1px rgba(36,48,40,0.05)",
+          lineHeight: 1,
+        }}
+      >
+        {text}
+      </motion.span>
+    </div>
+  );
+}
+
 function FAQ({ faq }: { faq:typeof faqs[0] }) {
   const [open,setOpen] = useState(false);
   return (
@@ -184,18 +226,22 @@ function RoomCard({ room, i }: { room:typeof rooms[0]; i:number }) {
   );
 }
 
-/* ── 3D story image — tilt + glare ── */
+/* ── 3D story image — scroll parallax + tilt + glare ── */
 function StoryImage({ img, i }: { img:string; i:number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount:0.2, once:true });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(10, { stiffness:120, damping:16 });
   const tall = i === 0 || i === 3;
+  // each image drifts at its own rate & direction as it passes through the viewport
+  const dir = i % 2 === 0 ? 1 : -1;
+  const y = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [30 * dir, -30 * dir]);
   return (
     <motion.div ref={ref}
-      initial={{ opacity:0, y:32 }} animate={inView?{opacity:1,y:0}:{}}
-      transition={{ delay:0.1+i*0.1, duration:0.7, ease:[0.22,1,0.36,1] }}
+      initial={{ opacity:0 }} animate={inView?{opacity:1}:{}}
+      transition={{ delay:0.05+i*0.08, duration:0.7, ease:[0.22,1,0.36,1] }}
       onMouseMove={onMove} onMouseLeave={onLeave}
-      style={{ perspective: reduce ? undefined : "900px" }}
+      style={{ perspective: reduce ? undefined : "900px", y }}
     >
       <motion.div
         className="relative overflow-hidden rounded-xl md:rounded-2xl"
@@ -285,6 +331,7 @@ export default function FarmsteadPage() {
 
   return (
     <>
+      <ScrollProgress />
       <Navbar />
 
       {/* ══ HERO ══ */}
@@ -431,8 +478,9 @@ export default function FarmsteadPage() {
       </section>
 
       {/* ══ ROOMS ══ */}
-      <section style={{ background:"rgba(36,48,40,0.03)", borderTop:"1px solid rgba(36,48,40,0.07)" }}>
-        <div className="max-w-6xl mx-auto px-5 md:px-12 py-16 md:py-28">
+      <section className="relative overflow-hidden" style={{ background:"rgba(36,48,40,0.03)", borderTop:"1px solid rgba(36,48,40,0.07)" }}>
+        <ParallaxGhost text="Rooms" align="right" />
+        <div className="relative max-w-6xl mx-auto px-5 md:px-12 py-16 md:py-28">
           <Reveal>
             <div className="flex items-center gap-3 mb-4">
               <span className="h-px w-8" style={{ background:"var(--color-terracotta)" }} />
