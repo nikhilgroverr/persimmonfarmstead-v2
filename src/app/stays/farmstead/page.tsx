@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import {
+  motion, useScroll, useTransform, useInView, AnimatePresence,
+  useMotionValue, useSpring, useReducedMotion, useMotionTemplate,
+} from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -48,16 +51,41 @@ const faqs = [
   { q:"Nearest airport?", a:"Kullu–Manali Airport at Bhuntar, roughly 35 km away. Our travel desk can arrange pickup." },
 ];
 
-/* ── Helpers ── */
+/* ── Reveal (reduced-motion aware) ── */
 function Reveal({ children, delay=0, y=24 }: { children:React.ReactNode; delay?:number; y?:number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount:0.15, once:true });
+  const reduce = useReducedMotion();
   return (
-    <motion.div ref={ref} initial={{ opacity:0, y }} animate={inView?{opacity:1,y:0}:{}}
+    <motion.div ref={ref}
+      initial={reduce ? { opacity:0 } : { opacity:0, y }}
+      animate={inView ? { opacity:1, y:0 } : {}}
       transition={{ delay, duration:0.7, ease:[0.22,1,0.36,1] }}>
       {children}
     </motion.div>
   );
+}
+
+/* ── Shared cursor-driven 3D tilt (with glare) ── */
+function useTilt(max = 9, softness = { stiffness: 150, damping: 18 }) {
+  const reduce = useReducedMotion();
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, softness);
+  const sy = useSpring(my, softness);
+  const rotateX = useTransform(sy, [-0.5, 0.5], [`${max}deg`, `${-max}deg`]);
+  const rotateY = useTransform(sx, [-0.5, 0.5], [`${-max}deg`, `${max}deg`]);
+  const gx = useTransform(sx, [-0.5, 0.5], ["20%", "80%"]);
+  const gy = useTransform(sy, [-0.5, 0.5], ["18%", "82%"]);
+  const glare = useMotionTemplate`radial-gradient(circle at ${gx} ${gy}, rgba(247,242,232,0.22), transparent 60%)`;
+  const onMove = (e: React.MouseEvent) => {
+    if (reduce) return;
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const onLeave = () => { mx.set(0); my.set(0); };
+  return { reduce, rotateX, rotateY, glare, onMove, onLeave };
 }
 
 function FAQ({ faq }: { faq:typeof faqs[0] }) {
@@ -84,59 +112,56 @@ function FAQ({ faq }: { faq:typeof faqs[0] }) {
   );
 }
 
-/* ── 3D Room Card ── */
+/* ── 3D Room Card — cursor tilt + depth-layered tag/number + glare ── */
 function RoomCard({ room, i }: { room:typeof rooms[0]; i:number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount:0.2, once:true });
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const sx = useSpring(mx, { stiffness:120, damping:20 });
-  const sy = useSpring(my, { stiffness:120, damping:20 });
-  const rotateX = useTransform(sy, [-0.5,0.5], ["8deg","-8deg"]);
-  const rotateY = useTransform(sx, [-0.5,0.5], ["-8deg","8deg"]);
-  const handleMove = (e: React.MouseEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    mx.set((e.clientX - rect.left)/rect.width - 0.5);
-    my.set((e.clientY - rect.top)/rect.height - 0.5);
-  };
+  const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(9);
+
   return (
     <motion.div ref={ref}
       initial={{ opacity:0, y:40 }} animate={inView?{opacity:1,y:0}:{}}
       transition={{ delay:0.1+i*0.12, duration:0.75, ease:[0.22,1,0.36,1] }}
-      onMouseMove={handleMove} onMouseLeave={()=>{ mx.set(0); my.set(0); }}
-      style={{ perspective:"1000px" }}
+      onMouseMove={onMove} onMouseLeave={onLeave}
+      style={{ perspective: reduce ? undefined : "1000px" }}
     >
       <motion.div
         style={{ rotateX, rotateY, transformStyle:"preserve-3d" }}
         className="group relative overflow-hidden rounded-2xl md:rounded-3xl cursor-pointer"
-        whileHover={{ scale:1.02 }} transition={{ duration:0.3 }}
+        whileHover={reduce ? undefined : { scale:1.02 }} transition={{ duration:0.3 }}
       >
         {/* Image */}
-        <div className="relative overflow-hidden" style={{ aspectRatio:"4/3" }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio:"4/3", transformStyle:"preserve-3d" }}>
           <motion.img src={room.img} alt={room.name}
             className="w-full h-full object-cover"
-            whileHover={{ scale:1.07 }} transition={{ duration:0.6 }}
+            whileHover={reduce ? undefined : { scale:1.07 }} transition={{ duration:0.6 }}
           />
           <div className="absolute inset-0" style={{ background:"linear-gradient(to bottom, rgba(8,6,4,0.1) 0%, rgba(8,6,4,0.55) 100%)" }} />
 
-          {/* Tag */}
-          <div className="absolute top-4 left-4">
+          {/* cursor glare */}
+          {!reduce && (
+            <motion.div className="absolute inset-0 pointer-events-none"
+              style={{ background: glare, mixBlendMode:"soft-light" }} />
+          )}
+
+          {/* Tag — floated forward */}
+          <div className="absolute top-4 left-4" style={{ transform: reduce ? undefined : "translateZ(45px)" }}>
             <span className="font-body text-[9px] tracking-[0.28em] uppercase px-2.5 py-1.5 rounded-full"
               style={{ background:"rgba(212,168,83,0.2)", border:"1px solid rgba(212,168,83,0.4)", backdropFilter:"blur(8px)", color:"#f5d98a" }}>
               {room.tag}
             </span>
           </div>
 
-          {/* Number */}
-          <div className="absolute bottom-4 right-4">
-            <span className="font-display italic" style={{ fontSize:"40px", color:"transparent", WebkitTextStroke:"1px rgba(247,242,232,0.25)", lineHeight:1 }}>
+          {/* Number — floated forward */}
+          <div className="absolute bottom-4 right-4" style={{ transform: reduce ? undefined : "translateZ(30px)" }}>
+            <span className="font-display italic" style={{ fontSize:"40px", color:"transparent", WebkitTextStroke:"1px rgba(247,242,232,0.3)", lineHeight:1 }}>
               {room.num}
             </span>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-5 md:p-6" style={{ background:"var(--color-cream-soft)", transformStyle:"preserve-3d" }}>
+        <div className="p-5 md:p-6" style={{ background:"var(--color-cream-soft)", transform: reduce ? undefined : "translateZ(18px)" }}>
           <h3 className="font-display italic mb-2" style={{ fontSize:"clamp(1.1rem, 2vw, 1.5rem)", color:"var(--color-ink)", letterSpacing:"-0.015em" }}>
             {room.name}
           </h3>
@@ -159,8 +184,81 @@ function RoomCard({ room, i }: { room:typeof rooms[0]; i:number }) {
   );
 }
 
+/* ── 3D story image — tilt + glare ── */
+function StoryImage({ img, i }: { img:string; i:number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount:0.2, once:true });
+  const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(10, { stiffness:120, damping:16 });
+  const tall = i === 0 || i === 3;
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity:0, y:32 }} animate={inView?{opacity:1,y:0}:{}}
+      transition={{ delay:0.1+i*0.1, duration:0.7, ease:[0.22,1,0.36,1] }}
+      onMouseMove={onMove} onMouseLeave={onLeave}
+      style={{ perspective: reduce ? undefined : "900px" }}
+    >
+      <motion.div
+        className="relative overflow-hidden rounded-xl md:rounded-2xl"
+        style={{ aspectRatio: tall ? "4/5" : "4/3", rotateX, rotateY, transformStyle:"preserve-3d" }}
+        whileHover={reduce ? undefined : { scale:1.03 }}
+        transition={{ duration:0.4, ease:"easeOut" }}
+      >
+        <motion.img src={img} alt=""
+          className="w-full h-full object-cover"
+          whileHover={reduce ? undefined : { scale:1.08 }} transition={{ duration:0.6 }}
+        />
+        {!reduce && (
+          <motion.div className="absolute inset-0 pointer-events-none"
+            style={{ background: glare, mixBlendMode:"soft-light" }} />
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ── Other-property banner with subtle tilt + glare ── */
+function OtherPropertyCard() {
+  const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(4, { stiffness:80, damping:18 });
+  return (
+    <div onMouseMove={onMove} onMouseLeave={onLeave} style={{ perspective: reduce ? undefined : "1200px" }}>
+      <motion.div className="relative overflow-hidden rounded-2xl md:rounded-3xl"
+        style={{ rotateX, rotateY, transformStyle:"preserve-3d" }}
+        whileHover={reduce ? undefined : { scale:1.01 }} transition={{ duration:0.4 }}>
+        <img src="https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=1400&q=80" alt=""
+          className="absolute inset-0 w-full h-full object-cover" style={{ filter:"brightness(0.4) saturate(0.8)" }} />
+        <div className="absolute inset-0" style={{ background:"linear-gradient(to right,rgba(6,8,6,0.7) 0%,rgba(6,8,6,0.2) 100%)" }} />
+        {!reduce && (
+          <motion.div className="absolute inset-0 pointer-events-none"
+            style={{ background: glare, mixBlendMode:"soft-light" }} />
+        )}
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 md:p-12"
+          style={{ transform: reduce ? undefined : "translateZ(40px)" }}>
+          <div>
+            <p className="font-body text-[9px] tracking-[0.28em] uppercase mb-2" style={{ color:"rgba(212,168,83,0.7)" }}>Shanag (Bahang) · Manali</p>
+            <h3 className="font-display italic mb-2" style={{ fontSize:"clamp(1.4rem,3vw,2.4rem)", color:"rgba(247,242,232,0.96)", letterSpacing:"-0.02em" }}>
+              Persimmon Farmstead Shanag
+            </h3>
+            <p className="font-body text-sm" style={{ color:"rgba(247,242,232,0.4)" }}>
+              Wooden chalets and stone cottages on open orchard lawns near Old Manali.
+            </p>
+          </div>
+          <motion.div whileHover={reduce ? undefined : { x:4 }} transition={{ duration:0.2 }}>
+            <Link href="/stays/shanag"
+              className="flex-shrink-0 inline-flex items-center gap-2.5 font-body text-[13px] tracking-wide rounded-full px-7 py-3"
+              style={{ background:"#d4a853", color:"#1a2218", fontWeight:500 }}>
+              View Property
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </Link>
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ── Page ── */
 export default function FarmsteadPage() {
+  const reduce = useReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target:heroRef, offset:["start start","end start"] });
   const imgY = useTransform(scrollYProgress, [0,1], ["0%","22%"]);
@@ -168,30 +266,50 @@ export default function FarmsteadPage() {
   const heroY = useTransform(scrollYProgress, [0,1], ["0%","35%"]);
   const heroOp = useTransform(scrollYProgress, [0,0.55], [1,0]);
 
+  // hero mouse parallax (depth)
+  const hmx = useMotionValue(0);
+  const hmy = useMotionValue(0);
+  const hsx = useSpring(hmx, { stiffness:55, damping:18 });
+  const hsy = useSpring(hmy, { stiffness:55, damping:18 });
+  const bgX = useTransform(hsx, [-0.5,0.5], ["-14px","14px"]);
+  const bgXY = useTransform(hsy, [-0.5,0.5], ["-9px","9px"]);
+  const ghostX = useTransform(hsx, [-0.5,0.5], ["28px","-28px"]);
+  const ghostY = useTransform(hsy, [-0.5,0.5], ["18px","-18px"]);
+  const heroMove = (e: React.MouseEvent) => {
+    if (reduce) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    hmx.set((e.clientX - r.left) / r.width - 0.5);
+    hmy.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const heroLeave = () => { hmx.set(0); hmy.set(0); };
+
   return (
     <>
       <Navbar />
 
       {/* ══ HERO ══ */}
-      <section ref={heroRef} className="relative w-full overflow-hidden"
+      <section ref={heroRef} onMouseMove={heroMove} onMouseLeave={heroLeave}
+        className="relative w-full overflow-hidden"
         style={{ height:"100svh", minHeight:"640px", background:"#060806" }}>
 
-        {/* Parallax BG */}
+        {/* Parallax BG (scroll) + mouse depth */}
         <motion.div className="absolute inset-0" style={{ y:imgY, scale:imgScale }}>
-          <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1920&q=90"
-            alt="" className="w-full h-full object-cover" style={{ filter:"brightness(0.55) saturate(0.85)" }} />
+          <motion.img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1920&q=90"
+            alt="" className="w-full h-full object-cover"
+            style={{ filter:"brightness(0.55) saturate(0.85)", x:bgX, y:bgXY, scale:1.08 }} />
         </motion.div>
 
         {/* Overlays */}
         <div className="absolute inset-0" style={{ background:"linear-gradient(to bottom,rgba(6,8,6,0.2) 0%,rgba(6,8,6,0.08) 40%,rgba(6,8,6,0.88) 100%)" }} />
         <div className="absolute inset-0" style={{ background:"linear-gradient(to right,rgba(6,8,6,0.5) 0%,transparent 65%)" }} />
 
-        {/* Ghost word */}
+        {/* Ghost word — mouse depth */}
         <div className="absolute inset-0 flex items-center justify-end pr-4 md:pr-12 pointer-events-none overflow-hidden" aria-hidden>
-          <span className="font-display italic select-none" style={{
+          <motion.span className="font-display italic select-none" style={{
             fontSize:"clamp(70px,16vw,240px)", fontWeight:300, letterSpacing:"-0.045em",
             color:"transparent", WebkitTextStroke:"1px rgba(247,242,232,0.06)", lineHeight:1, whiteSpace:"nowrap",
-          }}>Farmstead</span>
+            x:ghostX, y:ghostY,
+          }}>Farmstead</motion.span>
         </div>
 
         {/* Breadcrumb */}
@@ -233,7 +351,7 @@ export default function FarmsteadPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}>
+              <motion.div whileHover={reduce ? undefined : { scale:1.03 }} whileTap={{ scale:0.97 }}>
                 <Link href="/contact#form"
                   className="inline-flex items-center justify-center gap-2.5 font-body text-[13px] tracking-wide rounded-full px-8 py-3.5"
                   style={{ background:"#d4a853", color:"#1a2218", fontWeight:500, boxShadow:"0 4px 20px rgba(212,168,83,0.35)" }}>
@@ -305,19 +423,7 @@ export default function FarmsteadPage() {
             {/* Right — staggered 3D image grid */}
             <div className="grid grid-cols-2 gap-3 md:gap-4">
               {storyImgs.map((img,i)=>(
-                <Reveal key={i} delay={0.1+i*0.1} y={32}>
-                  <motion.div
-                    className="overflow-hidden rounded-xl md:rounded-2xl"
-                    style={{ aspectRatio: i===0||i===3 ? "4/5" : "4/3", transformStyle:"preserve-3d" }}
-                    whileHover={{ scale:1.03, rotateY:3, rotateX:-2 }}
-                    transition={{ duration:0.4, ease:"easeOut" }}
-                  >
-                    <motion.img src={img} alt=""
-                      className="w-full h-full object-cover"
-                      whileHover={{ scale:1.08 }} transition={{ duration:0.6 }}
-                    />
-                  </motion.div>
-                </Reveal>
+                <StoryImage key={i} img={img} i={i} />
               ))}
             </div>
           </div>
@@ -437,7 +543,7 @@ export default function FarmsteadPage() {
               You send a request, a real host confirms it by WhatsApp — usually within a few hours.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-              <motion.div whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}>
+              <motion.div whileHover={reduce ? undefined : { scale:1.03 }} whileTap={{ scale:0.97 }}>
                 <Link href="/contact#form"
                   className="inline-flex items-center gap-2.5 font-body text-[13px] tracking-wide rounded-full px-8 py-3.5"
                   style={{ background:"#d4a853", color:"#1a2218", fontWeight:500 }}>
@@ -484,31 +590,7 @@ export default function FarmsteadPage() {
         <div className="max-w-6xl mx-auto px-5 md:px-12 py-12 md:py-20">
           <Reveal>
             <p className="font-body text-[9px] tracking-[0.38em] uppercase mb-6" style={{ color:"var(--color-terracotta-dark)" }}>The other homes</p>
-            <motion.div className="relative overflow-hidden rounded-2xl md:rounded-3xl"
-              whileHover={{ scale:1.01 }} transition={{ duration:0.4 }}>
-              <img src="https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=1400&q=80" alt=""
-                className="absolute inset-0 w-full h-full object-cover" style={{ filter:"brightness(0.4) saturate(0.8)" }} />
-              <div className="absolute inset-0" style={{ background:"linear-gradient(to right,rgba(6,8,6,0.7) 0%,rgba(6,8,6,0.2) 100%)" }} />
-              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 md:p-12">
-                <div>
-                  <p className="font-body text-[9px] tracking-[0.28em] uppercase mb-2" style={{ color:"rgba(212,168,83,0.7)" }}>Shanag (Bahang) · Manali</p>
-                  <h3 className="font-display italic mb-2" style={{ fontSize:"clamp(1.4rem,3vw,2.4rem)", color:"rgba(247,242,232,0.96)", letterSpacing:"-0.02em" }}>
-                    Persimmon Farmstead Shanag
-                  </h3>
-                  <p className="font-body text-sm" style={{ color:"rgba(247,242,232,0.4)" }}>
-                    Wooden chalets and stone cottages on open orchard lawns near Old Manali.
-                  </p>
-                </div>
-                <motion.div whileHover={{ x:4 }} transition={{ duration:0.2 }}>
-                  <Link href="/stays/shanag"
-                    className="flex-shrink-0 inline-flex items-center gap-2.5 font-body text-[13px] tracking-wide rounded-full px-7 py-3"
-                    style={{ background:"#d4a853", color:"#1a2218", fontWeight:500 }}>
-                    View Property
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                  </Link>
-                </motion.div>
-              </div>
-            </motion.div>
+            <OtherPropertyCard />
           </Reveal>
         </div>
       </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
 const slides = [
@@ -54,10 +54,96 @@ const properties = [
   },
 ];
 
+/* ── Permanent, motion-driven property card (variant propagation) ── */
+function PropertyCard({ prop, reduce }: { prop: typeof properties[number]; reduce: boolean }) {
+  return (
+    <motion.div
+      initial="rest"
+      animate="rest"
+      whileHover="hover"
+      whileTap={reduce ? undefined : "hover"}
+      variants={{ rest: { y: 0 }, hover: { y: reduce ? 0 : -6 } }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      className="flex-1"
+    >
+      <Link
+        href={prop.href}
+        className="relative block overflow-hidden rounded-2xl p-4 md:p-[18px]"
+        style={{
+          border: "1px solid rgba(247,242,232,0.14)",
+          background: "rgba(247,242,232,0.06)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* gold hover tint + inner border */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-2xl"
+          variants={{ rest: { opacity: 0 }, hover: { opacity: 1 } }}
+          transition={{ duration: 0.35 }}
+          style={{
+            background: "linear-gradient(135deg, rgba(212,168,83,0.20), rgba(212,168,83,0.03))",
+            boxShadow: "inset 0 0 0 1px rgba(212,168,83,0.55)",
+          }}
+        />
+        {/* sheen sweep */}
+        {!reduce && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            variants={{ rest: { x: "-130%" }, hover: { x: "130%" } }}
+            transition={{ duration: 0.9, ease: "easeInOut" }}
+            style={{ background: "linear-gradient(105deg, transparent 42%, rgba(247,242,232,0.12) 50%, transparent 58%)" }}
+          />
+        )}
+
+        <div className="relative flex items-start justify-between gap-2">
+          <div>
+            <p className="font-body text-[9px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(212,168,83,0.75)" }}>
+              {prop.location}
+            </p>
+            <p className="font-display italic text-sm md:text-base leading-tight" style={{ color: "rgba(247,242,232,0.94)" }}>
+              {prop.name}
+            </p>
+          </div>
+          <motion.div
+            className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5"
+            variants={{
+              rest: { scale: 1, backgroundColor: "rgba(212,168,83,0.18)" },
+              hover: { scale: 1.12, backgroundColor: "rgba(212,168,83,0.95)" },
+            }}
+            transition={{ type: "spring", stiffness: 320, damping: 18 }}
+            style={{ border: "1px solid rgba(212,168,83,0.4)" }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" strokeWidth="2.5">
+              <motion.path
+                d="M5 12h14M13 6l6 6-6 6"
+                variants={{ rest: { stroke: "#d4a853" }, hover: { stroke: "#1a2218" } }}
+                transition={{ duration: 0.2 }}
+              />
+            </svg>
+          </motion.div>
+        </div>
+
+        <div className="relative mt-3 flex items-center gap-2">
+          <motion.span
+            className="block h-px"
+            style={{ background: "rgba(212,168,83,0.85)" }}
+            variants={{ rest: { width: 10 }, hover: { width: 26 } }}
+            transition={{ duration: 0.3 }}
+          />
+          <span className="font-body text-[10px] tracking-wide" style={{ color: "rgba(247,242,232,0.42)" }}>
+            View property
+          </span>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
 export default function Hero() {
   const [index, setIndex] = useState(0);
   const [tick, setTick] = useState(0);
-  const [hoveredProp, setHoveredProp] = useState<string | null>(null);
+  const reduce = useReducedMotion();
 
   const next = useCallback(() => {
     setIndex(i => (i + 1) % slides.length);
@@ -195,98 +281,72 @@ export default function Hero() {
 
         {/* Main content */}
         <div className="flex flex-col max-w-xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={"main-" + index}
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ delay: 0.2, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col"
-            >
-              <span className="font-body text-[10px] tracking-[0.38em] uppercase mb-3 md:mb-5" style={{ color: "#d4a853" }}>
-                ✦ &nbsp; Est. 2021 · A Mountain Retreat &nbsp; ✦
-              </span>
-
-              <h1
-                className="font-display italic leading-[1.02] mb-4"
-                style={{
-                  fontSize: "clamp(1.6rem, 5.5vw, 4.5rem)",
-                  letterSpacing: "-0.025em",
-                  color: "rgba(247,242,232,0.97)",
-                  textShadow: "0 6px 32px rgba(0,0,0,0.5)",
-                  whiteSpace: "pre-line",
-                }}
+          {/* Per-slide text — re-animates on slide change (fixed height so cards below stay put) */}
+          <div className="relative md:min-h-[290px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={"main-" + index}
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ delay: 0.2, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-col"
               >
-                {slide.heading}
-              </h1>
+                <span className="font-body text-[10px] tracking-[0.38em] uppercase mb-3 md:mb-5" style={{ color: "#d4a853" }}>
+                  ✦ &nbsp; Est. 2021 · A Mountain Retreat &nbsp; ✦
+                </span>
 
-              <div className="mb-3 md:mb-5" style={{ width: "48px", height: "1.5px", background: "linear-gradient(to right, #d4a853, rgba(212,168,83,0.2))", borderRadius: "2px" }} />
+                <h1
+                  className="font-display italic leading-[1.02] mb-4"
+                  style={{
+                    fontSize: "clamp(1.6rem, 5.5vw, 4.5rem)",
+                    letterSpacing: "-0.025em",
+                    color: "rgba(247,242,232,0.97)",
+                    textShadow: "0 6px 32px rgba(0,0,0,0.5)",
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  {slide.heading}
+                </h1>
 
-              <p className="font-body text-[12px] md:text-sm mb-4 md:mb-5" style={{ color: "rgba(247,242,232,0.5)", lineHeight: 1.85, maxWidth: "380px" }}>
-                {slide.desc}
-              </p>
+                <div className="mb-3 md:mb-5" style={{ width: "48px", height: "1.5px", background: "linear-gradient(to right, #d4a853, rgba(212,168,83,0.2))", borderRadius: "2px" }} />
 
-              <div className="hidden md:block mb-6 pl-4" style={{ borderLeft: "1.5px solid rgba(212,168,83,0.45)" }}>
-                <p className="font-display italic text-sm md:text-[15px]" style={{ color: "rgba(247,242,232,0.32)", lineHeight: 1.8 }}>
-                  "{slide.quote}"
+                <p className="font-body text-[12px] md:text-sm mb-4 md:mb-5" style={{ color: "rgba(247,242,232,0.5)", lineHeight: 1.85, maxWidth: "380px" }}>
+                  {slide.desc}
                 </p>
-              </div>
 
-              {/* Property selector cards */}
-              <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
-                {properties.map((prop) => (
-                  <Link
-                    key={prop.id}
-                    href={prop.href}
-                    onMouseEnter={() => setHoveredProp(prop.id)}
-                    onMouseLeave={() => setHoveredProp(null)}
-                    className="group flex-1 flex flex-col justify-between p-3.5 md:p-4 rounded-2xl transition-all duration-300"
-                    style={{
-                      background: hoveredProp === prop.id ? "rgba(212,168,83,0.18)" : "rgba(247,242,232,0.06)",
-                      border: hoveredProp === prop.id ? "1px solid rgba(212,168,83,0.5)" : "1px solid rgba(247,242,232,0.12)",
-                      backdropFilter: "blur(10px)",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <p className="font-body text-[9px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(212,168,83,0.7)" }}>
-                          {prop.location}
-                        </p>
-                        <p className="font-display italic text-sm md:text-base leading-tight" style={{ color: "rgba(247,242,232,0.92)" }}>
-                          {prop.name}
-                        </p>
-                      </div>
-                      <motion.div
-                        animate={{ x: hoveredProp === prop.id ? 2 : 0, opacity: hoveredProp === prop.id ? 1 : 0.4 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
-                        style={{ background: "rgba(212,168,83,0.2)", border: "1px solid rgba(212,168,83,0.35)" }}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d4a853" strokeWidth="2.5">
-                          <path d="M5 12h14M13 6l6 6-6 6" />
-                        </svg>
-                      </motion.div>
-                    </div>
-                    <p className="font-body text-[10px]" style={{ color: "rgba(247,242,232,0.35)" }}>
-                      View property →
-                    </p>
-                  </Link>
-                ))}
-              </div>
+                <div className="hidden md:block pl-4" style={{ borderLeft: "1.5px solid rgba(212,168,83,0.45)" }}>
+                  <p className="font-display italic text-sm md:text-[15px]" style={{ color: "rgba(247,242,232,0.32)", lineHeight: 1.8 }}>
+                    "{slide.quote}"
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-              {/* Main CTA */}
-              <Link
-                href="/contact#form"
-                className="self-start inline-flex items-center gap-2 font-body text-[12px] tracking-wide transition-all duration-200"
-                style={{ color: "rgba(247,242,232,0.4)" }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "rgba(247,242,232,0.75)"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(247,242,232,0.4)"}
-              >
-                or Reserve a Room directly →
-              </Link>
-            </motion.div>
-          </AnimatePresence>
+          {/* PERMANENT — property cards + reserve link (rendered once, never re-animate per slide) */}
+          <motion.div
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-5 md:mt-6"
+          >
+            <div className="flex flex-col sm:flex-row gap-2.5 mb-3.5">
+              {properties.map((prop) => (
+                <PropertyCard key={prop.id} prop={prop} reduce={!!reduce} />
+              ))}
+            </div>
+
+            <Link
+              href="/contact#form"
+              className="self-start inline-flex items-center gap-2 font-body text-[12px] tracking-wide transition-all duration-200"
+              style={{ color: "rgba(247,242,232,0.4)" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "rgba(247,242,232,0.75)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(247,242,232,0.4)"}
+            >
+              or Reserve a Room directly →
+            </Link>
+          </motion.div>
         </div>
 
         {/* Bottom row */}
