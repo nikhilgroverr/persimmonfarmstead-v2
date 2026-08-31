@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import {
+  motion, AnimatePresence, useReducedMotion,
+  useMotionValue, useSpring, useTransform,
+} from "framer-motion";
 import Link from "next/link";
 
 const slides = [
@@ -53,6 +56,36 @@ const properties = [
     href: "/stays/shanag",
   },
 ];
+
+/* ── Word-by-word heading reveal (reduced-motion aware) ── */
+function AnimatedHeading({ text, reduce }: { text: string; reduce: boolean }) {
+  if (reduce) return <>{text}</>;
+  return (
+    <>
+      {text.split("\n").map((line, li) => (
+        <span key={li} className="block" style={{ overflow: "hidden" }}>
+          <motion.span
+            className="inline-block"
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.2 + li * 0.06 } } }}
+          >
+            {line.split(" ").map((word, wi) => (
+              <span key={wi} className="inline-block" style={{ overflow: "hidden", marginRight: "0.22em" }}>
+                <motion.span
+                  className="inline-block"
+                  variants={{ hidden: { y: "116%" }, show: { y: "0%", transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } } }}
+                >
+                  {word}
+                </motion.span>
+              </span>
+            ))}
+          </motion.span>
+        </span>
+      ))}
+    </>
+  );
+}
 
 /* ── Permanent, motion-driven property card (variant propagation) ── */
 function PropertyCard({ prop, reduce }: { prop: typeof properties[number]; reduce: boolean }) {
@@ -145,6 +178,18 @@ export default function Hero() {
   const [tick, setTick] = useState(0);
   const reduce = useReducedMotion();
 
+  // mouse parallax (depth)
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 45, damping: 20 });
+  const sy = useSpring(my, { stiffness: 45, damping: 20 });
+  const bgX = useTransform(sx, [-0.5, 0.5], ["-18px", "18px"]);
+  const bgY = useTransform(sy, [-0.5, 0.5], ["-11px", "11px"]);
+  const ghostX = useTransform(sx, [-0.5, 0.5], ["34px", "-34px"]);
+  const ghostY = useTransform(sy, [-0.5, 0.5], ["22px", "-22px"]);
+  const contentX = useTransform(sx, [-0.5, 0.5], ["7px", "-7px"]);
+  const contentY = useTransform(sy, [-0.5, 0.5], ["5px", "-5px"]);
+
   const next = useCallback(() => {
     setIndex(i => (i + 1) % slides.length);
     setTick(t => t + 1);
@@ -152,6 +197,7 @@ export default function Hero() {
 
   const prev = useCallback(() => {
     setIndex(i => (i - 1 + slides.length) % slides.length);
+    setTick(t => t + 1);
   }, []);
 
   useEffect(() => {
@@ -159,15 +205,25 @@ export default function Hero() {
     return () => clearInterval(t);
   }, [next]);
 
+  const onMove = (e: React.MouseEvent) => {
+    if (reduce) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const onLeave = () => { mx.set(0); my.set(0); };
+
   const slide = slides[index];
 
   return (
     <section
       id="home"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       className="relative w-full overflow-hidden"
       style={{ height: "100svh", minHeight: "700px", maxHeight: "1100px", background: "#080604" }}
     >
-      {/* LAYER 1: Background image */}
+      {/* ── LAYER 1: Background — Ken Burns zoom + mouse parallax ── */}
       <AnimatePresence mode="sync">
         <motion.div
           key={"bg-" + index}
@@ -176,22 +232,26 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.8, ease: "easeInOut" }}
+          transition={{ duration: 2, ease: "easeInOut" }}
         >
-          <img
+          <motion.img
             src={slide.bg}
             alt=""
             className="w-full h-full object-cover"
-            style={{ filter: "brightness(0.72) saturate(0.9)" }}
+            style={{ filter: "brightness(0.72) saturate(0.9)", x: bgX, y: bgY }}
+            initial={{ scale: reduce ? 1.08 : 1.06 }}
+            animate={{ scale: reduce ? 1.08 : 1.16 }}
+            transition={{ duration: 8, ease: "linear" }}
           />
         </motion.div>
       </AnimatePresence>
 
-      {/* LAYER 2: Gradient overlays */}
+      {/* ── LAYER 2: Gradients + vignette ── */}
       <div className="absolute inset-0" style={{ zIndex: 2, background: "linear-gradient(to bottom, rgba(8,6,4,0.2) 0%, rgba(8,6,4,0.05) 30%, rgba(8,6,4,0.75) 100%)" }} />
       <div className="absolute inset-0" style={{ zIndex: 2, background: "linear-gradient(to right, rgba(8,6,4,0.5) 0%, transparent 55%)" }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2, background: "radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(6,6,4,0.55) 100%)" }} />
 
-      {/* LAYER 3: Ghost word */}
+      {/* ── LAYER 3: Ghost word — mouse parallax ── */}
       <div
         className="absolute inset-0 flex items-start justify-start overflow-hidden pointer-events-none"
         style={{ zIndex: 3, paddingLeft: "2%", paddingTop: "12%" }}
@@ -199,30 +259,34 @@ export default function Hero() {
         <AnimatePresence mode="wait">
           <motion.div
             key={"ghost-" + index}
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span style={{
-              fontFamily: "var(--font-display)",
-              fontStyle: "italic",
-              fontWeight: 300,
-              fontSize: "clamp(72px, 20vw, 320px)",
-              lineHeight: 0.88,
-              letterSpacing: "-0.04em",
-              color: "rgba(247,242,232,0.11)",
-              display: "block",
-              userSelect: "none",
-              whiteSpace: "nowrap",
-            }}>
+            <motion.span
+              style={{
+                x: ghostX,
+                y: ghostY,
+                fontFamily: "var(--font-display)",
+                fontStyle: "italic",
+                fontWeight: 300,
+                fontSize: "clamp(72px, 20vw, 320px)",
+                lineHeight: 0.88,
+                letterSpacing: "-0.04em",
+                color: "rgba(247,242,232,0.11)",
+                display: "block",
+                userSelect: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
               {slide.word}
-            </span>
+            </motion.span>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* LAYER 4: Foreground clipped image */}
+      {/* ── LAYER 4: Foreground clipped image — mouse parallax ── */}
       <AnimatePresence mode="sync">
         <motion.div
           key={"fg-" + index}
@@ -231,13 +295,15 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.8, ease: "easeInOut" }}
+          transition={{ duration: 2, ease: "easeInOut" }}
         >
-          <img
+          <motion.img
             src={slide.bg}
             alt=""
             className="w-full h-full object-cover"
             style={{
+              x: bgX,
+              y: bgY,
               clipPath: `polygon(0 ${slide.clipY}, 100% ${parseInt(slide.clipY) - 6}%, 100% 100%, 0% 100%)`,
               filter: "brightness(0.82) saturate(0.88)",
             }}
@@ -251,7 +317,7 @@ export default function Hero() {
         </motion.div>
       </AnimatePresence>
 
-      {/* LAYER 5: UI content */}
+      {/* ── LAYER 5: UI content ── */}
       <div
         className="absolute inset-0 flex flex-col justify-end md:justify-between px-5 md:px-14 lg:px-20 pt-16 md:pt-32 pb-5 md:pb-12"
         style={{ zIndex: 5 }}
@@ -271,7 +337,7 @@ export default function Hero() {
               transition={{ duration: 2.5, repeat: Infinity }}
             />
             <span className="font-body text-[10px] md:text-[11px] tracking-[0.32em] uppercase" style={{ color: "rgba(247,242,232,0.45)" }}>
-              Persimmon Farmstead · Hallan Valley, Himachal
+              Persimmon Farmstead · Manali, Himachal
             </span>
           </div>
           <div className="hidden md:block font-body text-[10px] tracking-wide" style={{ color: "rgba(247,242,232,0.25)" }}>
@@ -279,25 +345,31 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Main content */}
-        <div className="flex flex-col max-w-xl">
-          {/* Per-slide text — re-animates on slide change (fixed height so cards below stay put) */}
-          <div className="relative md:min-h-[290px]">
+        {/* Main content — subtle mouse parallax */}
+        <motion.div className="flex flex-col max-w-xl" style={{ x: contentX, y: contentY }}>
+          {/* Per-slide text (re-animates on slide change; fixed height keeps cards steady) */}
+          <div className="relative md:min-h-[300px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={"main-" + index}
-                initial={{ opacity: 0, y: 28 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
-                transition={{ delay: 0.2, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col"
               >
-                <span className="font-body text-[10px] tracking-[0.38em] uppercase mb-3 md:mb-5" style={{ color: "#d4a853" }}>
+                <motion.span
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.6 }}
+                  className="font-body text-[10px] tracking-[0.38em] uppercase mb-3 md:mb-5"
+                  style={{ color: "#d4a853" }}
+                >
                   ✦ &nbsp; Est. 2021 · A Mountain Retreat &nbsp; ✦
-                </span>
+                </motion.span>
 
                 <h1
-                  className="font-display italic leading-[1.02] mb-4"
+                  className="font-display italic leading-[1.04] mb-4"
                   style={{
                     fontSize: "clamp(1.6rem, 5.5vw, 4.5rem)",
                     letterSpacing: "-0.025em",
@@ -306,25 +378,43 @@ export default function Hero() {
                     whiteSpace: "pre-line",
                   }}
                 >
-                  {slide.heading}
+                  <AnimatedHeading text={slide.heading} reduce={!!reduce} />
                 </h1>
 
-                <div className="mb-3 md:mb-5" style={{ width: "48px", height: "1.5px", background: "linear-gradient(to right, #d4a853, rgba(212,168,83,0.2))", borderRadius: "2px" }} />
+                <motion.div
+                  className="mb-3 md:mb-5"
+                  style={{ height: "1.5px", background: "linear-gradient(to right, #d4a853, rgba(212,168,83,0.2))", borderRadius: "2px" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: "48px" }}
+                  transition={{ delay: 0.5, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                />
 
-                <p className="font-body text-[12px] md:text-sm mb-4 md:mb-5" style={{ color: "rgba(247,242,232,0.5)", lineHeight: 1.85, maxWidth: "380px" }}>
+                <motion.p
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.7 }}
+                  className="font-body text-[12px] md:text-sm mb-4 md:mb-5"
+                  style={{ color: "rgba(247,242,232,0.5)", lineHeight: 1.85, maxWidth: "380px" }}
+                >
                   {slide.desc}
-                </p>
+                </motion.p>
 
-                <div className="hidden md:block pl-4" style={{ borderLeft: "1.5px solid rgba(212,168,83,0.45)" }}>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7, duration: 0.8 }}
+                  className="hidden md:block pl-4"
+                  style={{ borderLeft: "1.5px solid rgba(212,168,83,0.45)" }}
+                >
                   <p className="font-display italic text-sm md:text-[15px]" style={{ color: "rgba(247,242,232,0.32)", lineHeight: 1.8 }}>
                     "{slide.quote}"
                   </p>
-                </div>
+                </motion.div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* PERMANENT — property cards + reserve link (rendered once, never re-animate per slide) */}
+          {/* PERMANENT — property cards + reserve link */}
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,15 +437,17 @@ export default function Hero() {
               or Reserve a Room directly →
             </Link>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Bottom row */}
         <div className="flex items-center justify-between">
+          {/* Thumbnails */}
           <div className="hidden sm:flex items-center gap-2">
             {slides.map((s, i) => (
               <button
                 key={i}
                 onClick={() => { setIndex(i); setTick(t => t + 1); }}
+                aria-label={`Go to slide ${i + 1}`}
                 className="rounded-lg overflow-hidden flex-shrink-0 transition-all duration-300"
                 style={{
                   width: i === index ? "52px" : "32px",
@@ -369,26 +461,39 @@ export default function Hero() {
             ))}
           </div>
 
+          {/* Slide counter + arrows */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5" style={{ color: "rgba(247,242,232,0.3)" }}>
-              <span className="font-display italic text-xl" style={{ color: "rgba(247,242,232,0.65)" }}>0{index + 1}</span>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35 }}
+                  className="font-display italic text-xl"
+                  style={{ color: "rgba(247,242,232,0.65)" }}
+                >
+                  0{index + 1}
+                </motion.span>
+              </AnimatePresence>
               <span className="font-body text-xs">/</span>
               <span className="font-body text-xs">0{slides.length}</span>
             </div>
             <div className="flex items-center gap-1.5">
               {[{ fn: prev, icon: "M19 12H5M12 19l-7-7 7-7" }, { fn: next, icon: "M5 12h14M12 5l7 7-7 7" }].map((btn, bi) => (
-                <button
+                <motion.button
                   key={bi}
                   onClick={btn.fn}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200"
+                  whileHover={reduce ? undefined : { scale: 1.1, backgroundColor: "rgba(247,242,232,0.14)" }}
+                  whileTap={{ scale: 0.94 }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center"
                   style={{ background: "rgba(247,242,232,0.07)", border: "1px solid rgba(247,242,232,0.14)", color: "rgba(247,242,232,0.7)" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(247,242,232,0.14)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(247,242,232,0.07)"}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d={btn.icon} />
                   </svg>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>

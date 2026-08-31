@@ -3,11 +3,12 @@
 import { useRef, useState } from "react";
 import {
   motion, useScroll, useTransform, useInView, AnimatePresence,
-  useMotionValue, useSpring, useReducedMotion, useMotionTemplate,
+  useMotionValue, useSpring, useReducedMotion, useMotionTemplate, useMotionValueEvent,
 } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { rooms } from "@/lib/rooms";
 
 /* ── Data ── */
 const amenities = [
@@ -22,25 +23,28 @@ const distances = [
   { place: "Naggar Castle", note: "day trip", dist: "8 km" },
   { place: "Solang Valley", note: "", dist: "22 km" },
 ];
-const rooms = [
-  { num:"01", name:"Deluxe Room", guests:"2–3 guests", bed:"King bed", view:"Orchard & mountains",
-    desc:"Our most-booked room — a cosy king-bedded room with a vaulted pine ceiling, persimmon artwork, and the orchard a few steps away.",
-    img:"https://images.unsplash.com/photo-1631049035182-249067d7618e?w=800&q=85",
-    tag:"Most Popular" },
-  { num:"02", name:"Premium Room", guests:"2 guests", bed:"King bed", view:"Mountain",
-    desc:"A little more room and a cleaner mountain line — a king-bedded double under the pitched wooden ceiling, with breakfast included.",
-    img:"https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=85",
-    tag:"Breakfast Included" },
-  { num:"03", name:"Balcony & Mountain-View Room", guests:"1–2 guests", bed:"Double bed", view:"Mountain + sit-out",
-    desc:"A snug room with a lounge corner and French windows opening to the pine-clad slopes — pull a chair out for the morning sun.",
-    img:"https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=800&q=85",
-    tag:"Best Views" },
-];
-const storyImgs = [
-  "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=900&q=85",
-  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=85",
-  "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900&q=85",
-  "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=85",
+type Chapter = { n: string; kicker: string; title: string; body: string; meta: string; img: string; label: string };
+const chapters: Chapter[] = [
+  { n: "01", kicker: "The Beginning", title: "Two friends,\none lockdown.",
+    body: "Persimmon began with two friends from very different corporate worlds — the kind of jobs measured in flights and slide decks. The lockdowns handed them an unfamiliar stillness, and when the roads reopened they drove up to Manali and simply never left.",
+    meta: "2021 · Where it started",
+    img: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&q=85", label: "The Farmhouse" },
+  { n: "02", kicker: "The Valley", title: "People who\nwalked away.",
+    body: "All through the Kullu valley they kept meeting people who had quietly left the city — baristas who used to be bankers, orchard owners who used to be engineers. Over a couple of pegs of Himalayan-brewed whisky one cold night, the two decided to become settlers too.",
+    meta: "Kullu Valley · A decision",
+    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=85", label: "The Valley" },
+  { n: "03", kicker: "The Kitchen", title: "The kitchen,\nfirst of all.",
+    body: "What they knew, more than hospitality, was food — so the first thing they got right wasn't the rooms, it was the kitchen. Everything is cooked in-house the way a family cooks for its own table. Guests still message weeks later asking for a recipe.",
+    meta: "In-house · Every meal",
+    img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=85", label: "The Kitchen Table" },
+  { n: "04", kicker: "The Land", title: "Angled to\nthe first light.",
+    body: "The land does the heavy lifting. Rooms are angled to catch the first sun, so in winter you wake up warm and lit with the ranges filling your window. Outside: apple and persimmon trees, and a kitchen garden the cooks raid every morning.",
+    meta: "Orchard · Kitchen garden",
+    img: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&q=85", label: "Where You Sleep" },
+  { n: "05", kicker: "Today", title: "One home\nbecame two.",
+    body: "When the Farmstead filled up, the family opened a second home at Shanag near Old Manali — the same kitchen, the same welcome. That is the whole story, really: a family that left one life for a quieter one, and now spends its days making sure yours is worth the drive up.",
+    meta: "Two homes · One family",
+    img: "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=1200&q=85", label: "Shanag" },
 ];
 const faqs = [
   { q:"Where is Persimmon Farmstead located?", a:"The original Farmstead is at 14 Mile in Badgran, about 14 km before Manali town — a quiet setting just a minute off the main highway." },
@@ -102,11 +106,12 @@ function ScrollProgress() {
 }
 
 /* ── Big outlined word that drifts on scroll (section depth) ── */
-function ParallaxGhost({ text, align = "right" }: { text: string; align?: "left" | "right" }) {
+function ParallaxGhost({ text, align = "right", tone = "dark" }: { text: string; align?: "left" | "right"; tone?: "light" | "dark" }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const reduce = useReducedMotion();
   const y = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [90, -90]);
+  const stroke = tone === "light" ? "rgba(247,242,232,0.06)" : "rgba(36,48,40,0.05)";
   return (
     <div ref={ref} aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
       <motion.span
@@ -120,7 +125,7 @@ function ParallaxGhost({ text, align = "right" }: { text: string; align?: "left"
           fontWeight: 300,
           letterSpacing: "-0.04em",
           color: "transparent",
-          WebkitTextStroke: "1px rgba(36,48,40,0.05)",
+          WebkitTextStroke: `1px ${stroke}`,
           lineHeight: 1,
         }}
       >
@@ -154,111 +159,241 @@ function FAQ({ faq }: { faq:typeof faqs[0] }) {
   );
 }
 
-/* ── 3D Room Card — cursor tilt + depth-layered tag/number + glare ── */
+/* ── Luxury room card → links to the room's dedicated page ── */
 function RoomCard({ room, i }: { room:typeof rooms[0]; i:number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount:0.2, once:true });
-  const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(9);
+  const reduce = useReducedMotion();
+
+  const gold = "#b5703f";
+  const specs: { icon: React.ReactNode; label: string }[] = [
+    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={gold} strokeWidth="1.6"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6"/></svg>, label: room.guests },
+    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={gold} strokeWidth="1.6"><path d="M3 18v-8h13a4 4 0 014 4v4M3 14h18M7 10V8a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>, label: room.bed },
+    { icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={gold} strokeWidth="1.6"><path d="M3 19l6-8 4 5 2-3 6 6z"/><circle cx="8" cy="7" r="1.5"/></svg>, label: room.view },
+  ];
 
   return (
-    <motion.div ref={ref}
-      initial={{ opacity:0, y:40 }} animate={inView?{opacity:1,y:0}:{}}
-      transition={{ delay:0.1+i*0.12, duration:0.75, ease:[0.22,1,0.36,1] }}
-      onMouseMove={onMove} onMouseLeave={onLeave}
-      style={{ perspective: reduce ? undefined : "1000px" }}
+    <motion.div ref={ref} className="h-full"
+      initial={reduce ? { opacity:0 } : { opacity:0, y:46 }}
+      animate={inView ? { opacity:1, y:0 } : {}}
+      transition={{ delay:0.1+i*0.12, duration:0.85, ease:[0.22,1,0.36,1] }}
     >
-      <motion.div
-        style={{ rotateX, rotateY, transformStyle:"preserve-3d" }}
-        className="group relative overflow-hidden rounded-2xl md:rounded-3xl cursor-pointer"
-        whileHover={reduce ? undefined : { scale:1.02 }} transition={{ duration:0.3 }}
+      <motion.div className="relative h-full"
+        initial="rest" animate="rest" whileHover={reduce ? undefined : "hover"}
+        variants={{ rest:{ y:0 }, hover:{ y:-8 } }}
+        transition={{ type:"spring", stiffness:260, damping:22 }}
       >
-        {/* Image */}
-        <div className="relative overflow-hidden" style={{ aspectRatio:"4/3", transformStyle:"preserve-3d" }}>
-          <motion.img src={room.img} alt={room.name}
-            className="w-full h-full object-cover"
-            whileHover={reduce ? undefined : { scale:1.07 }} transition={{ duration:0.6 }}
-          />
-          <div className="absolute inset-0" style={{ background:"linear-gradient(to bottom, rgba(8,6,4,0.1) 0%, rgba(8,6,4,0.55) 100%)" }} />
+        <Link href={`/rooms/${room.slug}`}
+          className="flex flex-col h-full rounded-[22px] overflow-hidden"
+          style={{ background:"#faf6ee", border:"1px solid rgba(36,48,40,0.09)", boxShadow:"0 26px 60px -38px rgba(43,27,17,0.55)" }}
+        >
+          {/* Image */}
+          <div className="relative overflow-hidden" style={{ aspectRatio:"4/3" }}>
+            <motion.img src={room.img} alt={room.name} className="w-full h-full object-cover"
+              variants={{ rest:{ scale:1 }, hover:{ scale:1.07 } }} transition={{ duration:0.8, ease:[0.22,1,0.36,1] }} />
+            <div className="absolute inset-0" style={{ background:"linear-gradient(to top, rgba(26,34,24,0.38), transparent 46%)" }} />
 
-          {/* cursor glare */}
-          {!reduce && (
-            <motion.div className="absolute inset-0 pointer-events-none"
-              style={{ background: glare, mixBlendMode:"soft-light" }} />
-          )}
-
-          {/* Tag — floated forward */}
-          <div className="absolute top-4 left-4" style={{ transform: reduce ? undefined : "translateZ(45px)" }}>
-            <span className="font-body text-[9px] tracking-[0.28em] uppercase px-2.5 py-1.5 rounded-full"
-              style={{ background:"rgba(212,168,83,0.2)", border:"1px solid rgba(212,168,83,0.4)", backdropFilter:"blur(8px)", color:"#f5d98a" }}>
-              {room.tag}
-            </span>
+            {/* tag */}
+            <div className="absolute top-4 left-4">
+              <span className="font-body text-[9px] tracking-[0.22em] uppercase px-3 py-1.5 rounded-full"
+                style={{ background:"rgba(247,242,232,0.92)", color:"#8a5328", border:"1px solid rgba(181,112,63,0.28)", backdropFilter:"blur(4px)" }}>
+                {room.tag}
+              </span>
+            </div>
+            {/* rating */}
+            <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1.5 rounded-full"
+              style={{ background:"rgba(26,34,24,0.5)", backdropFilter:"blur(6px)" }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#d4a853"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+              <span className="font-body text-[11px]" style={{ color:"rgba(247,242,232,0.95)" }}>4.9</span>
+            </div>
+            {/* number */}
+            <span className="absolute bottom-3 left-4 font-display italic pointer-events-none" style={{ fontSize:"34px", color:"transparent", WebkitTextStroke:"1px rgba(247,242,232,0.55)", lineHeight:1 }}>{room.num}</span>
+            {/* hover arrow */}
+            <motion.div className="absolute bottom-3 right-4 w-10 h-10 rounded-full flex items-center justify-center"
+              variants={{ rest:{ opacity:0, scale:0.8 }, hover:{ opacity:1, scale:1 } }} transition={{ duration:0.3 }}
+              style={{ background:"#d4a853", color:"#1a2218" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </motion.div>
           </div>
 
-          {/* Number — floated forward */}
-          <div className="absolute bottom-4 right-4" style={{ transform: reduce ? undefined : "translateZ(30px)" }}>
-            <span className="font-display italic" style={{ fontSize:"40px", color:"transparent", WebkitTextStroke:"1px rgba(247,242,232,0.3)", lineHeight:1 }}>
-              {room.num}
-            </span>
-          </div>
-        </div>
+          {/* gold ring on hover */}
+          <motion.div className="absolute inset-0 rounded-[22px] pointer-events-none"
+            variants={{ rest:{ opacity:0 }, hover:{ opacity:1 } }} transition={{ duration:0.4 }}
+            style={{ boxShadow:"inset 0 0 0 1.5px rgba(212,168,83,0.6)" }} />
 
-        {/* Content */}
-        <div className="p-5 md:p-6" style={{ background:"var(--color-cream-soft)", transform: reduce ? undefined : "translateZ(18px)" }}>
-          <h3 className="font-display italic mb-2" style={{ fontSize:"clamp(1.1rem, 2vw, 1.5rem)", color:"var(--color-ink)", letterSpacing:"-0.015em" }}>
-            {room.name}
-          </h3>
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {[room.guests, room.bed, room.view].map(t=>(
-              <span key={t} className="font-body text-[10px] px-2.5 py-1 rounded-full"
-                style={{ background:"rgba(36,48,40,0.05)", border:"1px solid rgba(36,48,40,0.08)", color:"rgba(26,34,24,0.55)" }}>{t}</span>
-            ))}
+          {/* Content */}
+          <div className="flex flex-col flex-1 p-6">
+            <h3 className="font-display mb-3 leading-tight" style={{ fontSize:"clamp(1.35rem, 2.2vw, 1.75rem)", color:"var(--color-ink)", letterSpacing:"-0.01em" }}>
+              {room.name}
+            </h3>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
+              {specs.map((s) => (
+                <span key={s.label} className="flex items-center gap-1.5">
+                  {s.icon}
+                  <span className="font-body text-[11.5px]" style={{ color:"rgba(26,34,24,0.55)" }}>{s.label}</span>
+                </span>
+              ))}
+            </div>
+            <p className="font-body text-[13.5px] leading-[1.75] mb-6 line-clamp-2" style={{ color:"rgba(26,34,24,0.6)" }}>
+              {room.short}
+            </p>
+            <motion.div className="mt-auto inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-body text-[11px] tracking-[0.14em] uppercase"
+              variants={{ rest:{ backgroundColor:"rgba(194,105,28,0)", color:"#b5703f" }, hover:{ backgroundColor:"rgba(194,105,28,1)", color:"#ffffff" } }}
+              transition={{ duration:0.3 }}
+              style={{ border:"1px solid rgba(181,112,63,0.5)" }}>
+              Explore this room
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </motion.div>
           </div>
-          <p className="font-body text-sm leading-[1.8] mb-4" style={{ color:"rgba(26,34,24,0.52)" }}>{room.desc}</p>
-          <Link href="/contact#form"
-            className="inline-flex items-center gap-2 font-body text-[12px] tracking-wide transition-colors duration-200"
-            style={{ color:"var(--color-terracotta-dark)" }}>
-            Room details
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </Link>
-        </div>
+        </Link>
       </motion.div>
     </motion.div>
   );
 }
 
-/* ── 3D story image — scroll parallax + tilt + glare ── */
-function StoryImage({ img, i }: { img:string; i:number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { amount:0.2, once:true });
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const { reduce, rotateX, rotateY, glare, onMove, onLeave } = useTilt(10, { stiffness:120, damping:16 });
-  const tall = i === 0 || i === 3;
-  // each image drifts at its own rate & direction as it passes through the viewport
-  const dir = i % 2 === 0 ? 1 : -1;
-  const y = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [30 * dir, -30 * dir]);
+/* ── Reduced-motion fallback: simple stacked chapters ── */
+function StoryStatic() {
   return (
-    <motion.div ref={ref}
-      initial={{ opacity:0 }} animate={inView?{opacity:1}:{}}
-      transition={{ delay:0.05+i*0.08, duration:0.7, ease:[0.22,1,0.36,1] }}
-      onMouseMove={onMove} onMouseLeave={onLeave}
-      style={{ perspective: reduce ? undefined : "900px", y }}
-    >
-      <motion.div
-        className="relative overflow-hidden rounded-xl md:rounded-2xl"
-        style={{ aspectRatio: tall ? "4/5" : "4/3", rotateX, rotateY, transformStyle:"preserve-3d" }}
-        whileHover={reduce ? undefined : { scale:1.03 }}
-        transition={{ duration:0.4, ease:"easeOut" }}
-      >
-        <motion.img src={img} alt=""
-          className="w-full h-full object-cover"
-          whileHover={reduce ? undefined : { scale:1.08 }} transition={{ duration:0.6 }}
-        />
-        {!reduce && (
-          <motion.div className="absolute inset-0 pointer-events-none"
-            style={{ background: glare, mixBlendMode:"soft-light" }} />
-        )}
-      </motion.div>
-    </motion.div>
+    <section className="relative w-full" style={{ background: "var(--color-cream-soft)" }}>
+      <div className="max-w-5xl mx-auto px-5 md:px-12 py-16 md:py-24">
+        <div className="flex items-center gap-3 mb-10">
+          <span className="h-px w-10" style={{ background: "var(--color-terracotta)" }} />
+          <p className="font-body text-[9px] tracking-[0.42em] uppercase" style={{ color: "var(--color-terracotta-dark)" }}>The story</p>
+        </div>
+        <div className="flex flex-col gap-14">
+          {chapters.map((ch, i) => (
+            <div key={i} className="grid md:grid-cols-2 gap-8 items-center">
+              <div className={i % 2 ? "md:order-2" : ""}>
+                <p className="font-body text-[10px] tracking-[0.4em] uppercase mb-3" style={{ color: "#b5703f" }}>{ch.n} — {ch.kicker}</p>
+                <h3 className="font-display italic leading-tight mb-4" style={{ fontSize: "clamp(1.6rem,3.4vw,2.6rem)", color: "var(--color-ink)", whiteSpace: "pre-line" }}>{ch.title}</h3>
+                <p className="font-body text-sm md:text-base leading-[1.9]" style={{ color: "rgba(26,34,24,0.6)" }}>{ch.body}</p>
+                <p className="font-body text-[10px] tracking-[0.22em] uppercase mt-4" style={{ color: "rgba(26,34,24,0.4)" }}>{ch.meta}</p>
+              </div>
+              <div className={`rounded-2xl overflow-hidden ${i % 2 ? "md:order-1" : ""}`} style={{ aspectRatio: "4/5" }}>
+                <img src={ch.img} alt={ch.label} className="w-full h-full object-cover" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Scrollytelling: pinned, scroll-scrubbed story chapters ── */
+function StoryScrolly() {
+  const reduce = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
+  const ghostY = useTransform(scrollYProgress, [0, 1], ["0px", "-140px"]);
+  const [active, setActive] = useState(0);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const idx = Math.min(chapters.length - 1, Math.max(0, Math.floor(v * chapters.length)));
+    setActive(idx);
+  });
+
+  if (reduce) return <StoryStatic />;
+
+  const ch = chapters[active];
+
+  return (
+    <section ref={containerRef} className="relative" style={{ height: `${chapters.length * 82}vh`, background: "var(--color-cream-soft)" }}>
+      <div className="sticky top-0 h-[100svh] overflow-hidden flex items-center">
+        {/* drifting ghost word */}
+        <motion.span
+          aria-hidden
+          className="absolute font-display italic select-none pointer-events-none"
+          style={{ right: "-3%", top: "6%", y: ghostY, fontSize: "clamp(120px, 22vw, 340px)", fontWeight: 300, color: "transparent", WebkitTextStroke: "1px rgba(36,48,40,0.05)", lineHeight: 1, whiteSpace: "nowrap" }}
+        >
+          Story
+        </motion.span>
+
+        <div className="relative w-full max-w-6xl mx-auto px-5 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+
+          {/* LEFT — text */}
+          <div className="relative order-2 md:order-1">
+            <div className="flex items-center gap-3 mb-8">
+              <span className="h-px w-10" style={{ background: "var(--color-terracotta)" }} />
+              <p className="font-body text-[9px] tracking-[0.42em] uppercase" style={{ color: "var(--color-terracotta-dark)" }}>The story</p>
+            </div>
+
+            {/* big faint numeral */}
+            <div className="absolute -top-4 right-0 pointer-events-none select-none" aria-hidden>
+              <AnimatePresence mode="wait">
+                <motion.span key={active}
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="font-display italic block"
+                  style={{ fontSize: "clamp(90px, 12vw, 170px)", lineHeight: 0.8, color: "transparent", WebkitTextStroke: "1.5px rgba(212,168,83,0.28)" }}>
+                  {ch.n}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div key={active} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }} className="relative">
+                <p className="font-body text-[10px] tracking-[0.4em] uppercase mb-4" style={{ color: "#b5703f" }}>{ch.kicker}</p>
+                <h3 className="font-display italic leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4.4vw, 3.4rem)", color: "var(--color-ink)", letterSpacing: "-0.028em" }}>
+                  {ch.title.split("\n").map((line, li) => (
+                    <span key={li} className="block" style={{ overflow: "hidden" }}>
+                      <motion.span className="inline-block"
+                        initial={{ y: "115%" }} animate={{ y: "0%" }}
+                        transition={{ delay: 0.08 + li * 0.08, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+                        {line}
+                      </motion.span>
+                    </span>
+                  ))}
+                </h3>
+                <p className="font-body text-sm md:text-base leading-[1.95] max-w-md" style={{ color: "rgba(26,34,24,0.6)" }}>{ch.body}</p>
+                <div className="flex items-center gap-2.5 mt-6">
+                  <span className="h-px w-6" style={{ background: "rgba(212,168,83,0.75)" }} />
+                  <span className="font-body text-[10px] tracking-[0.22em] uppercase" style={{ color: "rgba(26,34,24,0.42)" }}>{ch.meta}</span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* chapter dots */}
+            <div className="flex items-center gap-2.5 mt-9">
+              {chapters.map((_, i) => (
+                <div key={i} className="rounded-full transition-all duration-500" style={{ width: i === active ? 26 : 7, height: 7, background: i === active ? "#d4a853" : "rgba(36,48,40,0.16)" }} />
+              ))}
+              <span className="font-body text-[10px] ml-3" style={{ color: "rgba(26,34,24,0.4)" }}>0{active + 1} <span style={{ opacity: 0.5 }}>/ 0{chapters.length}</span></span>
+            </div>
+          </div>
+
+          {/* RIGHT — crossfading image */}
+          <div className="relative order-1 md:order-2">
+            <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden" style={{ aspectRatio: "4/5", boxShadow: "0 40px 90px -40px rgba(26,34,24,0.55)" }}>
+              <AnimatePresence>
+                <motion.div key={active} className="absolute inset-0"
+                  initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }}
+                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+                  <img src={ch.img} alt={ch.label} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,4,0.6) 0%, transparent 55%)" }} />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                <AnimatePresence mode="wait">
+                  <motion.div key={active} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.4 }} className="flex items-center gap-2.5">
+                    <span className="h-px w-5" style={{ background: "#d4a853" }} />
+                    <span className="font-display italic text-base" style={{ color: "rgba(247,242,232,0.97)" }}>{ch.label}</span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+            {/* vertical progress rail */}
+            <div className="absolute -left-5 md:-left-8 top-2 bottom-2 w-px hidden md:block" style={{ background: "rgba(36,48,40,0.12)" }}>
+              <motion.div className="w-full origin-top" style={{ height: "100%", background: "linear-gradient(to bottom,#d4a853,#b5703f)", scaleY: scrollYProgress }} />
+            </div>
+          </div>
+        </div>
+
+        {/* scroll cue */}
+        <motion.div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-px h-8 pointer-events-none"
+          style={{ background: "linear-gradient(to bottom,var(--color-terracotta),transparent)" }}
+          animate={{ opacity: [0.3, 1, 0.3], y: [0, 6, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
+      </div>
+    </section>
   );
 }
 
@@ -421,80 +556,27 @@ export default function FarmsteadPage() {
         </motion.div>
       </section>
 
-      {/* ══ STORY ══ */}
-      <section className="relative w-full overflow-hidden" style={{ background:"var(--color-cream-soft)" }}>
-        <div className="max-w-6xl mx-auto px-5 md:px-12 py-16 md:py-28">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-start">
-
-            {/* Left text */}
-            <div className="lg:sticky lg:top-28">
-              <Reveal>
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="h-px w-8" style={{ background:"var(--color-terracotta)" }} />
-                  <p className="font-body text-[9px] tracking-[0.38em] uppercase" style={{ color:"var(--color-terracotta-dark)" }}>The story</p>
-                </div>
-              </Reveal>
-              <Reveal delay={0.08}>
-                <h2 className="font-display italic leading-[1.08] mb-5" style={{
-                  fontSize:"clamp(2rem,4.5vw,3.5rem)", color:"var(--color-ink)", letterSpacing:"-0.025em" }}>
-                  Why this home<br />is the way it is.
-                </h2>
-              </Reveal>
-              <Reveal delay={0.12}>
-                <div style={{ height:"1.5px", width:"40px", background:"linear-gradient(to right,var(--color-terracotta),transparent)", borderRadius:"2px", marginBottom:"24px" }} />
-              </Reveal>
-              <Reveal delay={0.16}>
-                <p className="font-body text-sm md:text-base leading-[1.95] mb-5" style={{ color:"rgba(26,34,24,0.58)" }}>
-                  This is where Persimmon began. Two friends left corporate desks behind after the lockdowns, drove up to the Kullu valley, and decided to stay for good. The Farmstead is what they built first — timber chalets wrapped around an orchard, a minute's turn off the main highway and a world away from its noise.
-                </p>
-              </Reveal>
-              <Reveal delay={0.2}>
-                <p className="font-body text-sm md:text-base leading-[1.95] mb-5" style={{ color:"rgba(26,34,24,0.58)" }}>
-                  The land does the heavy lifting. Rooms are angled to catch the first light, so in winter you wake up warm and sunlit with the ranges filling your window. Outside, apple and persimmon trees, a garden for the evening, and a kitchen garden the cooks raid every morning.
-                </p>
-              </Reveal>
-              <Reveal delay={0.24}>
-                <p className="font-body text-sm md:text-base leading-[1.95] mb-8" style={{ color:"rgba(26,34,24,0.58)" }}>
-                  It is unfussy on purpose. The rooms are cosy rather than cavernous, the kitchen is a family kitchen rather than a hotel line — and both of those are the point. What you get instead is food made with care and hosts who notice when your chai is running low.
-                </p>
-              </Reveal>
-              <Reveal delay={0.28}>
-                <div className="pl-4" style={{ borderLeft:"1.5px solid rgba(212,168,83,0.45)" }}>
-                  <p className="font-display italic text-sm md:text-base" style={{ color:"rgba(26,34,24,0.38)", lineHeight:1.85 }}>
-                    "Food made with care and hosts who notice when your chai is running low."
-                  </p>
-                </div>
-              </Reveal>
-            </div>
-
-            {/* Right — staggered 3D image grid */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              {storyImgs.map((img,i)=>(
-                <StoryImage key={i} img={img} i={i} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ══ STORY (pinned scrollytelling) ══ */}
+      <StoryScrolly />
 
       {/* ══ ROOMS ══ */}
-      <section className="relative overflow-hidden" style={{ background:"rgba(36,48,40,0.03)", borderTop:"1px solid rgba(36,48,40,0.07)" }}>
+      <section className="relative overflow-hidden" style={{ background:"var(--color-cream-soft)", borderTop:"1px solid rgba(36,48,40,0.07)" }}>
         <ParallaxGhost text="Rooms" align="right" />
-        <div className="relative max-w-6xl mx-auto px-5 md:px-12 py-16 md:py-28">
+        <div className="relative max-w-6xl mx-auto px-5 md:px-12 py-20 md:py-28">
           <Reveal>
             <div className="flex items-center gap-3 mb-4">
               <span className="h-px w-8" style={{ background:"var(--color-terracotta)" }} />
-              <p className="font-body text-[9px] tracking-[0.38em] uppercase" style={{ color:"var(--color-terracotta-dark)" }}>The rooms</p>
+              <p className="font-body text-[9px] tracking-[0.42em] uppercase" style={{ color:"var(--color-terracotta-dark)" }}>The rooms</p>
             </div>
           </Reveal>
           <Reveal delay={0.08}>
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-3">
               <h2 className="font-display italic leading-tight" style={{
-                fontSize:"clamp(1.8rem,4vw,3.2rem)", color:"var(--color-ink)", letterSpacing:"-0.025em" }}>
-                Where you'll sleep.
+                fontSize:"clamp(1.9rem,4.2vw,3.4rem)", color:"var(--color-ink)", letterSpacing:"-0.025em" }}>
+                Where you&apos;ll sleep.
               </h2>
-              <p className="font-body text-sm md:text-base max-w-md" style={{ color:"rgba(26,34,24,0.45)", lineHeight:1.8 }}>
-                Honest rooms, honestly described. Cosy rather than cavernous — with the views and the food doing the heavy lifting.
+              <p className="font-body text-sm md:text-base max-w-md" style={{ color:"rgba(26,34,24,0.5)", lineHeight:1.8 }}>
+                Three rooms in the Badgran house, each a little different. Tap any room for the full picture.
               </p>
             </div>
           </Reveal>
@@ -505,8 +587,8 @@ export default function FarmsteadPage() {
                 transition={{ duration:1.2, ease:"easeOut" }} viewport={{ once:true }} />
             </div>
           </Reveal>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-            {rooms.map((room,i)=><RoomCard key={i} room={room} i={i} />)}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-7 items-stretch">
+            {rooms.map((room,i)=><RoomCard key={room.slug} room={room} i={i} />)}
           </div>
         </div>
       </section>
