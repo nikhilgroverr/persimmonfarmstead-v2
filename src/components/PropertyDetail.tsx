@@ -93,7 +93,7 @@ export default function PropertyDetail({ property }: { property: Property }) {
             <nav className="flex items-center gap-2 font-body text-[10px] tracking-[0.2em] uppercase mb-12" style={{ color: "rgba(26,34,24,0.4)" }} aria-label="Breadcrumb">
               <Link href="/" className="hover:text-terracotta-dark transition-colors">Home</Link>
               <span style={{ color: "var(--color-terracotta)" }}>/</span>
-              <Link href="/stay" className="hover:text-terracotta-dark transition-colors">Our Stays</Link>
+              <Link href="/all-stay" className="hover:text-terracotta-dark transition-colors">Our Stays</Link>
               <span style={{ color: "var(--color-terracotta)" }}>/</span>
               <span style={{ color: "rgba(26,34,24,0.7)" }}>{property.name}</span>
             </nav>

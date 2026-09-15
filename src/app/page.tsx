@@ -5,7 +5,7 @@ import PropertyShowcase from "@/components/PropertyShowcase";
 import KitchenArticleSection from "@/components/KitchenArticleSection";
 import ValleyBaseSection from "@/components/ValleyBaseSection";
 import Services from "@/components/Services";
-import Amenities from "@/components/Amenities";
+import HomeImageGallery from "@/components/HomeImageGallery";
 import GallerySection from "@/components/GallerySection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Location from "@/components/Location";
@@ -24,8 +24,7 @@ export default function Home() {
       <KitchenArticleSection />
       <ValleyBaseSection />
       <Services />
-      <Amenities />
-      <GallerySection />
+      <HomeImageGallery />
       <TestimonialsSection />
       <Location />
       <FAQSection />

@@ -44,17 +44,17 @@ const slides = [
 
 const properties = [
   {
-    id: "farmstead",
-    name: "Persimmon Farmstead",
-    location: "Badgran · Manali",
-    href: "/stays/farmstead",
-  },
-  {
     id: "shanag",
     name: "Farmstead Shanag",
     location: "Shanag · Old Manali",
     href: "/stays/shanag",
   },
+  {
+    id: "farmstead",
+    name: "Persimmon Farmstead",
+    location: "Badgran · Manali",
+    href: "/stays/farmstead",
+  }
 ];
 
 /* ── Word-by-word heading reveal (reduced-motion aware) ── */
@@ -348,7 +348,7 @@ export default function Hero() {
         {/* Main content — subtle mouse parallax */}
         <motion.div className="flex flex-col max-w-xl" style={{ x: contentX, y: contentY }}>
           {/* Per-slide text (re-animates on slide change; fixed height keeps cards steady) */}
-          <div className="relative md:min-h-[300px]">
+          <div className="relative h-[260px] sm:h-[310px] md:h-[400px] lg:h-[440px] overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={"main-" + index}
@@ -407,7 +407,7 @@ export default function Hero() {
                   style={{ borderLeft: "1.5px solid rgba(212,168,83,0.45)" }}
                 >
                   <p className="font-display italic text-sm md:text-[15px]" style={{ color: "rgba(247,242,232,0.32)", lineHeight: 1.8 }}>
-                    "{slide.quote}"
+                    &ldquo;{slide.quote}&rdquo;
                   </p>
                 </motion.div>
               </motion.div>

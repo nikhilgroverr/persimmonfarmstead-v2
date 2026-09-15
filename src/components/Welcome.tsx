@@ -1,14 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
 import Link from "next/link";
 
 const stats = [
-  { value: "12+", label: "Years", sub: "of hospitality" },
-  { value: "3.2K", label: "Guests", sub: "welcomed" },
-  { value: "14", label: "Rooms", sub: "handcrafted" },
-  { value: "4.9", label: "Rating", sub: "average score" },
+  { value: 12, suffix: "+", label: "Years", sub: "of hospitality" },
+  { value: 3.2, suffix: "K", label: "Guests", sub: "welcomed", decimals: 1 },
+  { value: 14, suffix: "", label: "Rooms", sub: "handcrafted" },
+  { value: 4.9, suffix: "", label: "Rating", sub: "average score", decimals: 1 },
 ];
 
 const marqueeItems = "Hallan Valley · Manali · Himachal Pradesh · Est. 2021 · Persimmon Farmstead · Mountain Hospitality · Handcrafted Stays · ";
@@ -45,6 +45,44 @@ const words = [
   { text: "at", outlined: false },
   { text: "home.", outlined: false },
 ];
+
+function StatIcon({ label }: { label: string }) {
+  const p = { width: 17, height: 17, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (label) {
+    case "Years":
+      return <svg {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>;
+    case "Guests":
+      return <svg {...p}><circle cx="9" cy="8" r="3.2" /><path d="M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6" /><circle cx="17" cy="9" r="2.4" /><path d="M15.5 14a5 5 0 0 1 6 5.5" /></svg>;
+    case "Rooms":
+      return <svg {...p}><path d="M2 17V9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3" /><path d="M2 12h20" /><path d="M22 17v-3a2 2 0 0 0-2-2h-4" /><path d="M2 17h20" /></svg>;
+    case "Rating":
+      return <svg {...p} fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>;
+    default:
+      return <span className="block w-2 h-2 rotate-45" style={{ background: "currentColor" }} />;
+  }
+}
+
+function CountUp({ value, suffix = "", decimals = 0, active, delay = 0 }: { value: number; suffix?: string; decimals?: number; active: boolean; delay?: number }) {
+  const [display, setDisplay] = useState("0");
+  const started = useRef(false);
+  useEffect(() => {
+    if (!active || started.current) return;
+    started.current = true;
+    const timeout = setTimeout(() => {
+      const start = performance.now();
+      const duration = 1400;
+      const step = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        setDisplay((value * eased).toFixed(decimals));
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, delay * 1000);
+    return () => clearTimeout(timeout);
+  }, [active, value, decimals, delay]);
+  return <>{display}{suffix}</>;
+}
 
 export default function Welcome() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -269,30 +307,41 @@ export default function Welcome() {
           </motion.div>
         </div>
 
-        {/* ── STATS — full width strip ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 1.15, duration: 0.7 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-px mb-10 md:mb-14 overflow-hidden rounded-2xl"
-          style={{ background: "rgba(36,48,40,0.07)", border: "1px solid rgba(36,48,40,0.07)" }}
+        {/* ── STATS — full width strip, icons + count-up, real dividers ── */}
+        <div
+          className="grid grid-cols-2 md:grid-cols-4 mb-10 md:mb-14 rounded-2xl overflow-hidden"
+          style={{ background: "var(--color-cream-soft)", border: "1px solid rgba(36,48,40,0.08)" }}
         >
           {stats.map((s, i) => (
-            <div key={i} className="flex flex-col items-center text-center py-6 md:py-8 px-4" style={{ background: "var(--color-cream-soft)" }}>
-              <motion.p
-                className="font-display italic leading-none mb-1.5"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.6rem)", color: "var(--color-terracotta-dark)" }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 1.2 + i * 0.08, duration: 0.5 }}
+            <div
+              key={i}
+              className={`group flex flex-col items-center text-center py-7 md:py-9 px-4 transition-colors duration-500 hover:bg-[rgba(212,168,83,0.05)] ${
+                i % 2 === 0 ? "border-r" : ""
+              } ${i < 2 ? "border-b md:border-b-0" : ""} ${i < 3 ? "md:border-r" : ""}`}
+              style={{ borderColor: "rgba(212,168,83,0.22)" }}
+            >
+              <span
+                className="flex-shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center mb-3 transition-transform duration-500 group-hover:scale-110"
+                style={{ background: "rgba(212,168,83,0.12)", color: "var(--color-terracotta-dark)" }}
+                aria-hidden
               >
-                {s.value}
-              </motion.p>
-              <p className="font-body text-[9px] md:text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(26,34,24,0.45)" }}>{s.label}</p>
-              <p className="font-body text-[9px] md:text-[10px]" style={{ color: "rgba(26,34,24,0.28)" }}>{s.sub}</p>
+                <StatIcon label={s.label} />
+              </span>
+              <p
+                className="font-display italic leading-none mb-1.5"
+                style={{ fontSize: "clamp(1.7rem, 4vw, 2.5rem)", color: "var(--color-terracotta-dark)" }}
+              >
+                <CountUp value={s.value} suffix={s.suffix} decimals={s.decimals ?? 0} active={isInView} delay={1.2 + i * 0.1} />
+              </p>
+              <p className="font-body text-[9px] md:text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(26,34,24,0.5)" }}>
+                {s.label}
+              </p>
+              <p className="font-body text-[9px] md:text-[10px]" style={{ color: "rgba(26,34,24,0.3)" }}>
+                {s.sub}
+              </p>
             </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* ── FEATURE CHIPS ── */}
         <motion.div
@@ -322,7 +371,7 @@ export default function Welcome() {
           transition={{ delay: 1.4, duration: 0.6 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3"
         >
-          <Link href="/stay"
+          <Link href="/all-stay"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 font-body text-[13px] tracking-wide rounded-full px-8 py-3.5 transition-all duration-200"
             style={{ background: "var(--color-terracotta-dark)", color: "var(--color-cream-soft)", boxShadow: "0 4px 20px rgba(36,48,40,0.18)" }}>
             Explore Our Stays

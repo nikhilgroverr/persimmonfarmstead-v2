@@ -37,3 +37,13 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Hides the scrollbar while keeping the element scrollable (used by
+   auto-advancing carousels where the scroll position is driven by JS). */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

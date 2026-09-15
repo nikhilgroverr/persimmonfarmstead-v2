@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 
@@ -15,6 +15,13 @@ const inter = Inter({
   weight: ["300", "400", "500", "600"],
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: "--font-accent",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["italic", "normal"],
+});
+
 export const metadata: Metadata = {
   title: "Persimmon Farmstead | Elegant Holiday Stays",
   description:
@@ -28,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${playfair.variable} ${inter.variable} antialiased`}>
+      <body className={`${playfair.variable} ${inter.variable} ${cormorant.variable} antialiased`}>
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

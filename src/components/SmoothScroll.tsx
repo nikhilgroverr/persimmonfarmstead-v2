@@ -11,7 +11,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const reduce = useReducedMotion();
   if (reduce) return <>{children}</>;
   return (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.2, smoothWheel: true }}>
+    <ReactLenis root options={{ lerp: 0.12, smoothWheel: true }}>
       {children}
     </ReactLenis>
   );

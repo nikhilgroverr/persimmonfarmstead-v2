@@ -4,6 +4,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { properties } from "@/lib/site";
 
+const DARK = "#0d130f";
+const GOLD = "#d4a853";
+
 const fadeUp = {
   hidden: { opacity: 0, y: 34 },
   show: (i: number = 0) => ({
@@ -39,7 +42,7 @@ export default function PropertyShowcase() {
     <section
       id="properties"
       className="relative w-full overflow-hidden"
-      style={{ background: "var(--color-cream-soft)" }}
+      style={{ background: DARK }}
     >
       {/* faint ghost word */}
       <div className="absolute top-0 right-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
@@ -49,7 +52,7 @@ export default function PropertyShowcase() {
             fontSize: "clamp(120px, 20vw, 280px)",
             fontWeight: 300,
             color: "transparent",
-            WebkitTextStroke: "1px rgba(36,48,40,0.05)",
+            WebkitTextStroke: "1px rgba(247,242,232,0.045)",
             lineHeight: 1,
             display: "block",
             transform: "translateX(12%)",
@@ -70,11 +73,11 @@ export default function PropertyShowcase() {
             variants={fadeUp}
             className="flex items-center justify-center gap-3 mb-6"
           >
-            <span className="h-px w-10" style={{ background: "var(--color-terracotta)" }} />
-            <span className="font-body text-[10px] tracking-[0.42em] uppercase" style={{ color: "var(--color-terracotta-dark)" }}>
+            <span className="h-px w-10" style={{ background: GOLD, opacity: 0.7 }} />
+            <span className="font-body text-[10px] tracking-[0.42em] uppercase" style={{ color: GOLD }}>
               Two Homes · One Family
             </span>
-            <span className="h-px w-10" style={{ background: "var(--color-terracotta)" }} />
+            <span className="h-px w-10" style={{ background: GOLD, opacity: 0.7 }} />
           </motion.div>
 
           <motion.h2
@@ -84,7 +87,7 @@ export default function PropertyShowcase() {
             custom={1}
             variants={fadeUp}
             className="font-display italic leading-[1.08] mb-5"
-            style={{ fontSize: "clamp(2rem, 5vw, 3.6rem)", letterSpacing: "-0.03em", color: "var(--color-ink)" }}
+            style={{ fontSize: "clamp(2rem, 5vw, 3.6rem)", letterSpacing: "-0.03em", color: "rgba(247,242,232,0.98)" }}
           >
             Choose your corner of the valley
           </motion.h2>
@@ -96,15 +99,15 @@ export default function PropertyShowcase() {
             custom={2}
             variants={fadeUp}
             className="font-body text-[15px] leading-[1.85] mx-auto"
-            style={{ color: "rgba(26,34,24,0.55)", maxWidth: "48ch" }}
+            style={{ color: "rgba(247,242,232,0.6)", maxWidth: "48ch" }}
           >
             Two boutique stays, the same kitchen and the same welcome — one on
             the highway before Manali, one tucked among the orchards above it.
           </motion.p>
         </div>
 
-        {/* Property cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-8">
+        {/* Property cards — full-bleed photo cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
           {properties.map((p, i) => (
             <motion.div
               key={p.slug}
@@ -116,113 +119,75 @@ export default function PropertyShowcase() {
             >
               <Link
                 href={`/stays/${p.slug}`}
-                className="group block h-full rounded-[20px] overflow-hidden transition-all duration-500"
-                style={{
-                  background: "#faf6ee",
-                  border: "1px solid rgba(36,48,40,0.09)",
-                  boxShadow: "0 20px 50px -30px rgba(26,34,24,0.35)",
-                }}
+                className="group relative block rounded-[24px] md:rounded-[28px] overflow-hidden"
+                style={{ aspectRatio: "4/5", boxShadow: "0 45px 90px -40px rgba(0,0,0,0.6)" }}
               >
-                {/* Image */}
-                <div className="relative overflow-hidden" style={{ aspectRatio: "16/11" }}>
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: "linear-gradient(to bottom, rgba(26,34,24,0.05) 0%, rgba(26,34,24,0.12) 55%, rgba(26,34,24,0.75) 100%)" }}
-                  />
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(to top, rgba(6,8,6,0.88) 0%, rgba(6,8,6,0.2) 52%, rgba(6,8,6,0.05) 72%)" }}
+                />
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: "rgba(6,8,6,0.12)" }}
+                />
 
-                  {/* Flagship / location badge */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2">
-                    {p.flagship && (
-                      <span
-                        className="font-body text-[9px] tracking-[0.22em] uppercase px-3 py-1.5 rounded-full"
-                        style={{
-                          background: "rgba(212,168,83,0.22)",
-                          border: "1px solid rgba(212,168,83,0.45)",
-                          color: "#f5d98a",
-                          backdropFilter: "blur(8px)",
-                        }}
-                      >
-                        ✦ Flagship
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Rating pill */}
-                  <div
-                    className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                    style={{
-                      background: "rgba(247,242,232,0.14)",
-                      border: "1px solid rgba(247,242,232,0.25)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <Stars />
-                    <span className="font-body text-[11px] font-medium" style={{ color: "rgba(247,242,232,0.95)" }}>
-                      {p.rating.toFixed(1)}
-                    </span>
-                    <span className="font-body text-[10px]" style={{ color: "rgba(247,242,232,0.6)" }}>
-                      · {p.reviews}
-                    </span>
-                  </div>
-
-                  {/* Name over image bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-                    <div className="flex items-center gap-1.5 mb-2" style={{ color: "rgba(247,242,232,0.6)" }}>
-                      <PinIcon />
-                      <span className="font-body text-[10px] tracking-[0.18em] uppercase">{p.locationShort}</span>
-                    </div>
-                    <h3
-                      className="font-display italic leading-tight"
-                      style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", color: "rgba(247,242,232,0.98)", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}
+                {/* Flagship badge */}
+                {p.flagship && (
+                  <div className="absolute top-5 left-5 md:top-6 md:left-6">
+                    <span
+                      className="font-body text-[9px] tracking-[0.22em] uppercase px-3.5 py-2 rounded-full"
+                      style={{ background: "rgba(255,255,255,0.1)", color: "rgba(247,242,232,0.85)", border: "1px solid rgba(255,255,255,0.16)", backdropFilter: "blur(8px)" }}
                     >
-                      {p.name}
-                    </h3>
+                      ✦ Flagship
+                    </span>
                   </div>
+                )}
+
+                {/* Rating pill */}
+                <div
+                  className="absolute top-5 right-5 md:top-6 md:right-6 flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.16)", backdropFilter: "blur(8px)" }}
+                >
+                  <Stars />
+                  <span className="font-body text-[11px] font-medium" style={{ color: "rgba(247,242,232,0.95)" }}>
+                    {p.rating.toFixed(1)}
+                  </span>
+                  <span className="font-body text-[10px]" style={{ color: "rgba(247,242,232,0.6)" }}>
+                    · {p.reviews}
+                  </span>
                 </div>
 
-                {/* Body */}
-                <div className="p-5 md:p-7">
-                  <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: "var(--color-terracotta-dark)" }}>
+                {/* Name, tagline, meta over image bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                  <div className="flex items-center gap-1.5 mb-2" style={{ color: "rgba(247,242,232,0.55)" }}>
+                    <PinIcon />
+                    <span className="font-body text-[10px] tracking-[0.18em] uppercase">{p.locationShort}</span>
+                  </div>
+                  <h3
+                    className="font-display italic leading-tight mb-2"
+                    style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.4rem)", color: "rgba(247,242,232,0.98)", textShadow: "0 4px 20px rgba(0,0,0,0.4)" }}
+                  >
+                    {p.name}
+                  </h3>
+                  <p className="font-body text-[13px] leading-[1.6] mb-5 max-w-sm" style={{ color: "rgba(247,242,232,0.68)" }}>
                     {p.tagline}
                   </p>
-                  <p className="font-body text-[13.5px] leading-[1.8] mb-5" style={{ color: "rgba(26,34,24,0.6)" }}>
-                    {p.description}
-                  </p>
-
-                  {/* Amenity chips */}
-                  <div className="flex flex-wrap gap-1.5 mb-6">
-                    {p.amenities.map((a) => (
-                      <span
-                        key={a}
-                        className="font-body text-[11px] px-2.5 py-1 rounded-full"
-                        style={{ background: "rgba(36,48,40,0.05)", border: "1px solid rgba(36,48,40,0.08)", color: "rgba(26,34,24,0.55)" }}
-                      >
-                        {a}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* CTA row */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-body text-[12px]" style={{ color: "rgba(247,242,232,0.55)" }}>
+                      {p.amenities.slice(0, 2).join(" · ")}
+                    </p>
                     <span
-                      className="inline-flex items-center gap-2 font-body text-[12px] tracking-[0.16em] uppercase rounded-full px-5 py-2.5 transition-colors duration-300"
-                      style={{ background: "var(--color-terracotta-dark)", color: "var(--color-cream-soft)" }}
+                      className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1"
+                      style={{ border: "1px solid rgba(247,242,232,0.4)", color: "#f7f2e8" }}
                     >
-                      Explore this stay
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="transition-transform duration-300 group-hover:translate-x-1">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                         <path d="M5 12h14M13 6l6 6-6 6" />
                       </svg>
-                    </span>
-                    <span
-                      className="font-body text-[12px]"
-                      style={{ color: "rgba(26,34,24,0.4)" }}
-                    >
-                      or check dates
                     </span>
                   </div>
                 </div>

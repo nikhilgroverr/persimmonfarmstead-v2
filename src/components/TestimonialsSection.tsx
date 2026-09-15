@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const GOLD = "#d4a853";
+
 const testimonials = [
   { quote: "Amazing host — it honestly felt like staying at my own place. We came for the mountains and left talking about the food.", name: "Ragghav M.", source: "Google", initials: "RM" },
   { quote: "Some of the best food we ate in Manali. Fresh juice at breakfast, everything made in-house. The owners genuinely look after you.", name: "A Verified Guest", source: "Google", initials: "VG" },
@@ -12,45 +14,11 @@ const testimonials = [
   { quote: "Cosy cottages, apple orchards, and a kitchen that punches well above its size. Pet-friendly too, which made the trip for us.", name: "A Verified Guest", source: "GoIbibo", initials: "VG" },
 ];
 
-function pickThree(exclude: number[]): number[] {
-  const pool = testimonials.map((_, i) => i);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  const picked = shuffled.slice(0, 3);
-  if (exclude.length === 3 && picked.every((v) => exclude.includes(v))) {
-    return pickThree(exclude);
-  }
-  return picked;
-}
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.94, filter: "blur(6px)" },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.8, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] as const },
-  }),
-  exit: (i: number) => ({
-    opacity: 0,
-    y: -30,
-    scale: 0.96,
-    filter: "blur(4px)",
-    transition: { duration: 0.5, delay: i * 0.05, ease: [0.4, 0, 1, 1] as const },
-  }),
-};
-
 function Stars() {
   return (
-    <div className="flex gap-1 mb-5">
+    <div className="flex items-center justify-center gap-1.5 mb-8">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="url(#goldStar)">
-          <defs>
-            <linearGradient id="goldStar" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#f0c987" />
-              <stop offset="100%" stopColor="#b5703f" />
-            </linearGradient>
-          </defs>
+        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={GOLD}>
           <path d="M12 2l2.95 6.9L22 9.6l-5.5 5 1.6 7.3L12 18.3 5.9 21.9l1.6-7.3L2 9.6l7.05-.7L12 2z" />
         </svg>
       ))}
@@ -59,21 +27,28 @@ function Stars() {
 }
 
 export default function TestimonialsSection() {
-  const [active, setActive] = useState<number[]>(() => pickThree([]));
-  const [cycle, setCycle] = useState(0);
+  const n = testimonials.length;
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-  const rotate = useCallback(() => {
-    setActive((prev) => pickThree(prev));
-    setCycle((c) => c + 1);
-  }, []);
+  const next = useCallback(() => setActive((a) => (a + 1) % n), [n]);
+  const prev = () => setActive((a) => (a - 1 + n) % n);
 
   useEffect(() => {
-    const timer = setInterval(rotate, 5500);
+    if (paused) return;
+    const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [rotate]);
+  }, [next, paused]);
+
+  const t = testimonials[active];
 
   return (
-    <section className="relative w-full overflow-hidden" style={{ background: "#0a1510" }}>
+    <section
+      className="relative w-full overflow-hidden"
+      style={{ background: "#0a1510" }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       {/* ambient glow */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -92,7 +67,7 @@ export default function TestimonialsSection() {
         }}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-24 md:py-32">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 py-24 md:py-32">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -101,110 +76,110 @@ export default function TestimonialsSection() {
           className="text-center mb-16 md:mb-20"
         >
           <div className="flex items-center justify-center gap-3 mb-6">
-            <span style={{ width: 26, height: 1, background: "#d4a853" }} />
-            <span className="font-body text-[10px] tracking-[0.42em] uppercase" style={{ color: "#d4a853" }}>
+            <span style={{ width: 26, height: 1, background: GOLD }} />
+            <span className="font-body text-[10px] tracking-[0.42em] uppercase" style={{ color: GOLD }}>
               The Valley, In Their Words
             </span>
-            <span style={{ width: 26, height: 1, background: "#d4a853" }} />
+            <span style={{ width: 26, height: 1, background: GOLD }} />
           </div>
           <h2
-            className="font-display italic"
-            style={{ fontSize: "clamp(1.7rem, 3.6vw, 2.8rem)", color: "rgba(247,242,232,0.96)", letterSpacing: "-0.02em" }}
+            className="italic"
+            style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(1.9rem, 4.2vw, 3.1rem)", color: "rgba(247,242,232,0.97)", letterSpacing: "-0.01em" }}
           >
             Three words come up again and again —<br className="hidden md:block" /> the food, the hosts, the view.
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 md:gap-7" style={{ minHeight: "380px" }}>
-          <AnimatePresence mode="popLayout">
-            {active.map((idx, slot) => {
-              const t = testimonials[idx];
-              return (
-                <motion.div
-                  key={`${cycle}-${idx}`}
-                  custom={slot}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="show"
-                  exit="exit"
-                  layout
-                  className="relative group"
+        {/* ── Spotlight panel — engraved-invitation style, same framing as the CTA bands ── */}
+        <div className="relative px-8 py-16 md:px-20 md:py-20" style={{ border: "1px solid rgba(247,242,232,0.14)" }}>
+          <span aria-hidden className="absolute top-5 left-5 w-7 h-7" style={{ borderTop: `1px solid ${GOLD}`, borderLeft: `1px solid ${GOLD}`, opacity: 0.75 }} />
+          <span aria-hidden className="absolute bottom-5 right-5 w-7 h-7" style={{ borderBottom: `1px solid ${GOLD}`, borderRight: `1px solid ${GOLD}`, opacity: 0.75 }} />
+
+          {/* giant faint quote mark */}
+          <span
+            aria-hidden
+            className="absolute select-none pointer-events-none italic"
+            style={{ fontFamily: "var(--font-accent)", top: "-1.5rem", left: "50%", transform: "translateX(-50%)", fontSize: "12rem", lineHeight: 1, color: "rgba(212,168,83,0.06)" }}
+          >
+            &rdquo;
+          </span>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="relative text-center"
+            >
+              <Stars />
+              <p
+                className="italic mb-10 mx-auto"
+                style={{ fontFamily: "var(--font-accent)", fontWeight: 500, fontSize: "clamp(1.4rem, 2.6vw, 2rem)", lineHeight: 1.6, color: "rgba(247,242,232,0.96)", maxWidth: "42ch" }}
+              >
+                &ldquo;{t.quote}&rdquo;
+              </p>
+
+              <div className="flex items-center justify-center gap-3">
+                <div
+                  className="flex items-center justify-center rounded-full flex-shrink-0 italic text-[13px]"
                   style={{
-                    background: "linear-gradient(155deg, rgba(247,242,232,0.06), rgba(247,242,232,0.02))",
-                    border: "1px solid rgba(212,168,83,0.22)",
-                    borderRadius: "20px",
-                    padding: "2.2rem 2rem",
-                    backdropFilter: "blur(14px)",
-                    WebkitBackdropFilter: "blur(14px)",
-                    boxShadow: "0 30px 60px -24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(247,242,232,0.08)",
+                    fontFamily: "var(--font-accent)",
+                    fontWeight: 600,
+                    width: 42,
+                    height: 42,
+                    background: "linear-gradient(135deg, #d4a853, #b5703f)",
+                    color: "#1a2218",
+                    boxShadow: "0 0 0 2px rgba(212,168,83,0.25)",
                   }}
                 >
-                  <div
-                    className="absolute top-0 right-0 pointer-events-none"
-                    style={{
-                      width: "120px",
-                      height: "120px",
-                      background: "radial-gradient(circle, rgba(212,168,83,0.14) 0%, transparent 70%)",
-                      borderRadius: "20px",
-                    }}
-                  />
-
-                  <span
-                    className="absolute font-display italic select-none pointer-events-none"
-                    style={{ top: "-6px", right: "18px", fontSize: "72px", color: "rgba(212,168,83,0.1)", lineHeight: 1 }}
-                  >
-                    &rdquo;
-                  </span>
-
-                  <Stars />
-
-                  <p
-                    className="font-display text-[15.5px] leading-[1.75] mb-8 relative z-10"
-                    style={{ color: "rgba(247,242,232,0.92)" }}
-                  >
-                    &ldquo;{t.quote}&rdquo;
+                  {t.initials}
+                </div>
+                <div className="text-left">
+                  <p className="font-body text-[13px] font-semibold" style={{ color: "rgba(247,242,232,0.92)" }}>
+                    {t.name}
                   </p>
-
-                  <div className="flex items-center gap-3 pt-5" style={{ borderTop: "1px solid rgba(247,242,232,0.1)" }}>
-                    <div
-                      className="flex items-center justify-center rounded-full flex-shrink-0 font-display italic text-[12px]"
-                      style={{
-                        width: 34,
-                        height: 34,
-                        background: "linear-gradient(135deg, #d4a853, #b5703f)",
-                        color: "#1a2218",
-                      }}
-                    >
-                      {t.initials}
-                    </div>
-                    <div>
-                      <p className="font-body text-[12.5px] font-semibold" style={{ color: "rgba(247,242,232,0.9)" }}>
-                        {t.name}
-                      </p>
-                      <p className="font-body text-[10px] tracking-[0.1em] uppercase" style={{ color: "rgba(212,168,83,0.6)" }}>
-                        {t.source}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  <p className="font-body text-[10px] tracking-[0.14em] uppercase" style={{ color: "rgba(212,168,83,0.65)" }}>
+                    {t.source}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-14">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <span
-              key={i}
-              className="rounded-full"
-              style={{
-                width: cycle % 4 === i ? 22 : 6,
-                height: 6,
-                background: cycle % 4 === i ? "#d4a853" : "rgba(247,242,232,0.2)",
-                transition: "all 0.5s ease",
-              }}
-            />
-          ))}
+        {/* Arrows + dots */}
+        <div className="flex items-center justify-center gap-6 mt-12">
+          <button
+            onClick={prev}
+            aria-label="Previous testimonial"
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-110"
+            style={{ border: `1px solid rgba(212,168,83,0.4)`, color: GOLD }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+
+          <div className="flex items-center gap-2">
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                aria-label={`Go to testimonial ${i + 1}`}
+                className="rounded-full transition-all duration-500"
+                style={{ width: i === active ? 22 : 6, height: 6, background: i === active ? GOLD : "rgba(247,242,232,0.2)" }}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={next}
+            aria-label="Next testimonial"
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-110"
+            style={{ border: `1px solid rgba(212,168,83,0.4)`, color: GOLD }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 18l6-6-6-6" /></svg>
+          </button>
         </div>
       </div>
     </section>
