@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 
 const ACCENT = "#b5703f";
 const GOLD = "#c99a5f";
@@ -59,6 +60,34 @@ const fadeUp = {
   }),
 };
 
+const harvestPhotos = ["/images/har1.webp", "/images/har2.webp"];
+
+function HarvestCrossfade() {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex((i) => (i + 1) % harvestPhotos.length);
+    }, 3500);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <AnimatePresence mode="sync">
+      <motion.img
+        key={index}
+        src={harvestPhotos[index]}
+        alt="The orchard at Persimmon Farmstead"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1.6, ease: "linear" }}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    </AnimatePresence>
+  );
+}
+
+
 export default function ValleyBaseSection() {
   return (
     <section style={{ background: "#f5ebdd" }}>
@@ -81,12 +110,8 @@ export default function ValleyBaseSection() {
                 transform: "rotate(-1.5deg)",
               }}
             >
-              <div className="relative rounded-lg overflow-hidden" style={{ aspectRatio: "4/5" }}>
-                <img
-                  src="https://images.unsplash.com/photo-1596397249129-c7a8f8e05a4e?w=1200&q=80"
-                  alt="Apple harvest at Shanag"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                <div className="relative rounded-lg overflow-hidden" style={{ aspectRatio: "4/5" }}>
+                  <HarvestCrossfade />
                 <div aria-hidden className="absolute inset-1.5 rounded pointer-events-none" style={{ border: `1px solid ${GOLD}88` }} />
                 <span aria-hidden className="absolute top-3.5 left-3.5 w-5 h-5 pointer-events-none" style={{ borderTop: `1px solid ${GOLD}`, borderLeft: `1px solid ${GOLD}`, opacity: 0.85 }} />
                 <span aria-hidden className="absolute bottom-3.5 right-3.5 w-5 h-5 pointer-events-none" style={{ borderBottom: `1px solid ${GOLD}`, borderRight: `1px solid ${GOLD}`, opacity: 0.85 }} />
