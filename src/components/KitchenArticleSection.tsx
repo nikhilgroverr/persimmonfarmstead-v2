@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -11,6 +11,39 @@ const fadeUp = {
     transition: { duration: 0.85, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
+
+const kitchenPhotos = [
+  "/images/FAM1.webp",
+  "/images/FAM2.webp",
+  "/images/FAM3.webp",
+  "/images/FAM4.webp",
+  "/images/FAM5.webp",
+];
+
+function KitchenCrossfade() {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndex((i) => (i + 1) % kitchenPhotos.length);
+    }, 3500);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <AnimatePresence mode="sync">
+      <motion.img
+        key={index}
+        src={kitchenPhotos[index]}
+        alt="Farm kitchen table, Persimmon Farmstead"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1.6, ease: "linear" }}
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+    </AnimatePresence>
+  );
+}
 
 export default function KitchenArticleSection() {
   const ref = useRef<HTMLElement>(null);
@@ -53,8 +86,8 @@ export default function KitchenArticleSection() {
         }}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-28 md:py-36">
-        <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-14 md:gap-20 items-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-12 py-10 md:py-28 lg:py-36 min-h-[100svh] md:min-h-0 flex flex-col justify-end md:block">
+          <div className="grid md:grid-cols-[1.1fr_0.9fr] gap-14 md:gap-20 items-center">
           <div>
             <motion.div
               initial="hidden"
@@ -66,7 +99,7 @@ export default function KitchenArticleSection() {
             >
               <span style={{ width: 30, height: "1px", background: "#d98e4c" }} />
               <span className="font-body text-[10px] tracking-[0.4em] uppercase" style={{ color: "#d98e4c" }}>
-                From Our Kitchen
+                From Our Family
               </span>
             </motion.div>
 
@@ -79,19 +112,19 @@ export default function KitchenArticleSection() {
               className="font-display leading-[1.05] mb-8"
               style={{ fontSize: "clamp(2.3rem, 5vw, 4.2rem)", letterSpacing: "-0.025em" }}
             >
-              <span style={{ color: "#f7f2e8" }}>Nothing here</span>
-              <br />
-              <span
-                className="italic"
-                style={{
-                  background: "linear-gradient(90deg, #f0c987, #d98e4c 60%, #b5703f)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                comes from a packet
-              </span>
+<span style={{ color: "#f7f2e8" }}>Nothing here</span>
+<br />
+<span
+  className="italic"
+  style={{
+    background: "linear-gradient(90deg, #f0c987, #d98e4c 60%, #b5703f)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+  }}
+>
+  is run by strangers
+</span>
             </motion.h2>
 
             <motion.p
@@ -109,11 +142,12 @@ export default function KitchenArticleSection() {
               >
                 E
               </span>
-              very meal begins the same way it always has here — with
-              whatever the garden and the day's market gave us. No fixed
-              menu, no walk-in freezer, no shortcuts. Just a family cooking
-              the way they would for their own table, and setting one more
-              place for you.
+very person who greets you here actually lives on this land —
+not a rotating staff clocking in from town, but the same family
+who planted these orchards. They know your name by the second
+morning, remember how you take your chai, and notice if you've
+gone quiet. That's not a service standard. It's just how a
+family runs their own home.
             </motion.p>
 
             <motion.div
@@ -128,9 +162,9 @@ export default function KitchenArticleSection() {
                 <path d="M0 24V13.8C0 6.2 4.8 1 12.6 0l1.2 4.4C8.4 5.6 6 8.6 6 13h6v11H0zm18 0V13.8C18 6.2 22.8 1 30.6 0l1.2 4.4c-5.4 1.2-7.8 4.2-7.8 8.6h6v11H18z"/>
               </svg>
               <div>
-                <p className="font-display italic text-[18px] mb-1.5" style={{ color: "#f7f2e8" }}>
-                  Tasted like someone's grandmother had cooked it herself.
-                </p>
+<p className="font-display italic text-[18px] mb-1.5" style={{ color: "#f7f2e8" }}>
+  Felt less like a hotel stay, more like visiting family.
+</p>
                 <p className="font-body text-[10.5px] tracking-[0.15em] uppercase" style={{ color: "rgba(247,242,232,0.4)" }}>
                   — A Guest, on TripAdvisor
                 </p>
@@ -147,7 +181,7 @@ export default function KitchenArticleSection() {
               className="group inline-flex items-center gap-3 font-body text-[12px] font-semibold tracking-[0.18em] uppercase rounded-full pl-1 pr-1.5 py-1.5"
               style={{ border: "1px solid rgba(217,142,76,0.35)", color: "#f0c987" }}
             >
-              <span className="pl-5">Taste the story</span>
+              <span className="pl-5">Meet the family</span>
               <span
                 className="flex items-center justify-center rounded-full transition-transform duration-300 group-hover:translate-x-0.5"
                 style={{ width: 30, height: 30, background: "linear-gradient(135deg, #d98e4c, #b5703f)" }}
@@ -174,17 +208,14 @@ export default function KitchenArticleSection() {
                 transform: "rotate(2deg)",
               }}
             >
-              <img
-                src="https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=1000&q=80"
-                alt="Farm kitchen table, Persimmon Farmstead"
-                className="w-full"
-                style={{ aspectRatio: "4/5", objectFit: "cover" }}
-              />
+              <div className="relative w-full" style={{ aspectRatio: "4/5" }}>
+                <KitchenCrossfade />
+              </div>
               <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 60%, rgba(10,10,10,0.65) 100%)" }} />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <p className="font-body text-[10px] tracking-[0.15em] uppercase" style={{ color: "rgba(247,242,232,0.7)" }}>
-                  Made In-House · Daily
-                </p>
+  Family Run · Since 2021
+</p>
               </div>
             </div>
 

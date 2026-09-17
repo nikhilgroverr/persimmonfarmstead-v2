@@ -101,7 +101,7 @@ function PropertyCard({ prop, reduce }: { prop: typeof properties[number]; reduc
     >
       <Link
         href={prop.href}
-        className="relative block overflow-hidden rounded-2xl p-4 md:p-[18px]"
+        className="relative block overflow-hidden rounded-xl md:rounded-2xl p-3 md:p-[18px]"
         style={{
           border: "1px solid rgba(247,242,232,0.14)",
           background: "rgba(247,242,232,0.06)",
@@ -131,11 +131,11 @@ function PropertyCard({ prop, reduce }: { prop: typeof properties[number]; reduc
 
         <div className="relative flex items-start justify-between gap-2">
           <div>
-            <p className="font-body text-[9px] tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(212,168,83,0.75)" }}>
-              {prop.location}
-            </p>
-            <p className="font-display italic text-sm md:text-base leading-tight" style={{ color: "rgba(247,242,232,0.94)" }}>
+            <p className="font-display italic text-[13px] sm:text-sm md:text-base leading-tight" style={{ color: "rgba(247,242,232,0.94)" }}>
               {prop.name}
+            </p>
+            <p className="font-body text-[8px] md:text-[9px] tracking-[0.2em] md:tracking-[0.25em] uppercase mb-1 truncate" style={{ color: "rgba(212,168,83,0.75)" }}>
+              {prop.location}
             </p>
           </div>
           <motion.div
@@ -164,7 +164,7 @@ function PropertyCard({ prop, reduce }: { prop: typeof properties[number]; reduc
             variants={{ rest: { width: 10 }, hover: { width: 26 } }}
             transition={{ duration: 0.3 }}
           />
-          <span className="font-body text-[10px] tracking-wide" style={{ color: "rgba(247,242,232,0.42)" }}>
+          <span className="hidden sm:inline font-body text-[10px] tracking-wide" style={{ color: "rgba(247,242,232,0.42)" }}>
             View property
           </span>
         </div>
@@ -421,7 +421,7 @@ export default function Hero() {
             transition={{ delay: 0.55, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
             className="mt-5 md:mt-6"
           >
-            <div className="flex flex-col sm:flex-row gap-2.5 mb-3.5">
+            <div className="flex flex-row gap-2 mb-3.5">
               {properties.map((prop) => (
                 <PropertyCard key={prop.id} prop={prop} reduce={!!reduce} />
               ))}

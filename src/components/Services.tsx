@@ -1,6 +1,7 @@
 "use client";
 
 import Reveal from "./Reveal";
+import { useState, useEffect } from "react";
 
 const services = [
   {
@@ -43,7 +44,20 @@ const services = [
   },
 ];
 
+const homeImages = [
+  { src: "/images/HOME1.webp", alt: "Farmstead pool and lounge area at our boutique hotel in Manali" },
+  { src: "/images/HOME2.webp", alt: "Farm-to-table dining detail at the property restaurant" },
+];
+
 export default function Services() {
+
+  const [order, setOrder] = useState(homeImages);
+  useEffect(() => {
+    if (Math.random() < 0.5) {
+      setOrder([homeImages[1], homeImages[0]]);
+    }
+  }, []);
+
   return (
     <section
       id="services"
@@ -170,8 +184,8 @@ export default function Services() {
 
               <div className="relative w-[88%] md:w-[420px] h-[86%] md:h-[480px] rounded-2xl overflow-hidden shadow-[0_40px_80px_-20px_rgba(43,27,17,0.35)] z-10">
                 <img
-                  src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1100&q=80"
-                  alt="Farmstead pool and lounge area at our boutique hotel in Manali"
+                  src={order[0].src}
+                  alt={order[0].alt}
                   className="w-full h-full object-cover"
                 />
                 <span
@@ -188,8 +202,8 @@ export default function Services() {
 
               <div className="absolute left-0 md:left-[-10%] bottom-6 w-[44%] md:w-[220px] h-[36%] md:h-[200px] rounded-xl overflow-hidden border-8 border-cream-soft shadow-[0_30px_60px_-15px_rgba(43,27,17,0.35)] z-20">
                 <img
-                  src="https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=700&q=80"
-                  alt="Farm-to-table dining detail at the property restaurant"
+                  src={order[1].src}
+                  alt={order[1].alt}
                   className="w-full h-full object-cover"
                 />
               </div>

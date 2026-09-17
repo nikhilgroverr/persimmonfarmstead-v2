@@ -298,7 +298,7 @@ export default function Navbar({ forceSolid = false }: { forceSolid?: boolean } 
         {/* Logo */}
         <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
           <Link href="/" className="flex items-center flex-shrink-0">
-            <img src="/logo.png" alt="Persimmon Farmstead" className={`w-auto max-w-[90px] transition-all duration-500 ${scrolled ? "h-8 md:h-9" : "h-10 md:h-12"}`} />
+            <img src="/logo.webp" alt="Persimmon Farmstead" className={`w-auto max-w-[160px] transition-all duration-500 ${scrolled ? "h-12 md:h-14" : "h-16 md:h-20"}`} />
           </Link>
         </motion.div>
 

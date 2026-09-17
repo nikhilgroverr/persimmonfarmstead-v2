@@ -12,11 +12,10 @@ type PhotoGroup = { title: string; folder: string; prefix: string; count: number
 const photoGroups: PhotoGroup[] = [
   { title: "Deluxe Room", folder: "/images/farmstead/rooms/deluxe-room", prefix: "deluxe", count: 13 },
   { title: "Premium Room", folder: "/images/farmstead/rooms/premium-room", prefix: "pr", count: 13 },
-  { title: "Balcony & Mountain View", folder: "/images/farmstead/rooms/balcony-mountain", prefix: "", count: 5 },
   { title: "Badagran", folder: "/images/farmstead/badagran", prefix: "gallery-", count: 5 },
   { title: "Wooden Hut Cottage", folder: "/images/shanag/rooms/wooden-hut-cottage", prefix: "WHC", count: 12 },
-  { title: "2BHK Cottage", folder: "/images/shanag/rooms/2bhk-cottage", prefix: "2BHKC", count: 18 },
-  { title: "Deluxe Cottage", folder: "/images/shanag/rooms/deluxe-cottage", prefix: "cottage", count: 19 },
+  { title: "2BHK Cottage", folder: "/images/shanag/rooms/2bhk-cottage", prefix: "2BHKC", count: 19 },
+  { title: "Deluxe Cottage", folder: "/images/shanag/rooms/deluxe-cottage", prefix: "cottage", count: 7 },
   { title: "3BHK Cottage", folder: "/images/shanag/rooms/3bhk-cottage", prefix: "3BHKC", count: 18 },
 ];
 

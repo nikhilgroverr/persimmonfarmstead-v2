@@ -28,7 +28,7 @@ export default function Home() {
       <TestimonialsSection />
       <Location />
       <FAQSection />
-      <Instagram />
+      {/* <Instagram /> */}
       <CTA />
       <Footer />
     </main>

@@ -88,6 +88,33 @@ export type Property = {
  * placeholders — replace with real building photos when available.
  */
 export const properties: Property[] = [
+    {
+    slug: "shanag",
+    name: "Persimmon Farmstead Shanag",
+    flagship: false,
+    locationShort: "Shanag (Bahang) · Manali",
+    tagline: "Chalets & cottages on orchard lawns",
+    description:
+      "Our boutique hotel in Shanag village near Bahang, about 4–5 km north of Manali. It blends wooden chalets and stone cottages across wide orchard lawns — close enough to Old Manali and Mall Road to wander in, far enough to wake up to apple trees and snow-kissed peaks.",
+    rating: 4.9,
+    reviews: "141+",
+    amenities: [
+      "Wooden chalets",
+      "Stone cottages",
+      "Orchard lawns",
+      "Near Old Manali",
+    ],
+    coordinates: { lat: 32.306541, lng: 77.17561 },
+    mapEmbed: "https://www.google.com/maps?q=32.306541,77.17561&z=13&output=embed",
+    mapLink:
+      "https://www.google.com/maps?ll=32.306541,77.17561&z=10&t=m&hl=en-US&gl=US&mapclient=embed&cid=3627561132221631321",
+    image: "/images/HOMESHOWCASESHANAG2.webp",
+    gallery: [
+      "/images/HOMESHOWCASESHANAG4.webp",
+      "/images/HOMESHOWCASESHANAG3.webp",
+      "/images/HOMESHOWCASESHANAG2.webp",
+    ],
+  },
   {
     slug: "farmstead",
     name: "Persimmon Farmstead",
@@ -108,40 +135,11 @@ export const properties: Property[] = [
     mapEmbed: "https://www.google.com/maps?q=32.130316,77.155124&z=13&output=embed",
     mapLink:
       "https://www.google.com/maps?ll=32.130316,77.155124&z=10&t=m&hl=en-US&gl=US&mapclient=embed&cid=12947353045947150512",
-    image:
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1400&q=80",
+    image: "/images/HOMESHOWCASEFARMSTEAD2.webp",
     gallery: [
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=80",
-      "https://images.unsplash.com/photo-1631049035182-249067d7618e?w=900&q=80",
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80",
-    ],
-  },
-  {
-    slug: "shanag",
-    name: "Persimmon Farmstead Shanag",
-    flagship: false,
-    locationShort: "Shanag (Bahang) · Manali",
-    tagline: "Chalets & cottages on orchard lawns",
-    description:
-      "Our boutique hotel in Shanag village near Bahang, about 4–5 km north of Manali. It blends wooden chalets and stone cottages across wide orchard lawns — close enough to Old Manali and Mall Road to wander in, far enough to wake up to apple trees and snow-kissed peaks.",
-    rating: 4.9,
-    reviews: "141+",
-    amenities: [
-      "Wooden chalets",
-      "Stone cottages",
-      "Orchard lawns",
-      "Near Old Manali",
-    ],
-    coordinates: { lat: 32.306541, lng: 77.17561 },
-    mapEmbed: "https://www.google.com/maps?q=32.306541,77.17561&z=13&output=embed",
-    mapLink:
-      "https://www.google.com/maps?ll=32.306541,77.17561&z=10&t=m&hl=en-US&gl=US&mapclient=embed&cid=3627561132221631321",
-    image:
-      "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=1400&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1596397249129-c7a8f8e05a4e?w=900&q=80",
-      "https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=900&q=80",
-      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=900&q=80",
+      "/images/HOMESHOWCASEFARMSTEAD2.webp",
+      "/images/HOMESHOWCASEFARMSTEAD3.webp",
+      "/images/HOMESHOWCASEFARMSTEAD4.webp",
     ],
   },
 ];

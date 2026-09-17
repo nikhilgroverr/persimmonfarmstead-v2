@@ -37,6 +37,12 @@ function Stars() {
   );
 }
 
+const orderedProperties = [...properties].sort((a, b) => {
+  if (a.slug === "shanag") return -1;
+  if (b.slug === "shanag") return 1;
+  return 0;
+});
+
 export default function PropertyShowcase() {
   return (
     <section
@@ -108,7 +114,7 @@ export default function PropertyShowcase() {
 
         {/* Property cards — full-bleed photo cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-          {properties.map((p, i) => (
+          {orderedProperties.map((p, i) => (
             <motion.div
               key={p.slug}
               initial="hidden"
