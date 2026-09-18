@@ -856,7 +856,7 @@ export default function FarmsteadPage() {
               </motion.div>
             </div>
             <div className="flex items-center gap-3 justify-center">
-              {[{l:"+91 62306 45166",r:"916230645166"},{l:"+91 99999 75545",r:"919999975545"},{l:"+91 88005 00292",r:"918800500292"}].map(p=>(
+              {[{l:"+91 62306 45166",r:"916230645166"},{l:"+91 99999 75545",r:"919999975545"},{l:"+91 91388 81116",r:"919138881116"}].map(p=>(
                 <Link key={p.r} href={`https://wa.me/${p.r}`} target="_blank" aria-label={`WhatsApp ${p.l}`} title={p.l}
                   className="inline-flex items-center justify-center rounded-full transition-all duration-300"
                   style={{ width:44, height:44, border:"1px solid rgba(212,168,83,0.35)", color:"rgba(212,168,83,0.85)" }}

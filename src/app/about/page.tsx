@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring, useMotionValueEvent } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring, useMotionValueEvent, useInView } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -141,7 +141,8 @@ function TiltCard({ children, className = "", style }: { children: React.ReactNo
   );
 }
 
-/* ── Pinned scrollytelling — the site's signature mechanic, reused here ── */
+/* ── Pinned scrollytelling — the site's signature mechanic, reused here,
+     now with the framed-photo + engraved-badge treatment used elsewhere. ── */
 function StoryScrolly() {
   const reduce = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -178,32 +179,39 @@ function StoryScrolly() {
   return (
     <section ref={containerRef} className="relative" style={{ height: `${chapters.length * 82}vh`, background: "var(--color-cream-soft)" }}>
       <div className="sticky top-0 h-[100svh] overflow-hidden flex items-center">
-        <motion.span
-          aria-hidden
-          className="absolute font-display italic select-none pointer-events-none"
-          style={{ right: "-3%", top: "6%", fontSize: "clamp(110px, 20vw, 300px)", fontWeight: 300, color: "transparent", WebkitTextStroke: "1px rgba(36,48,40,0.05)", lineHeight: 1, whiteSpace: "nowrap" }}
-        >
-          Story
-        </motion.span>
+        <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 55% 55% at 78% 45%, rgba(194,105,28,0.05) 0%, transparent 70%)" }} />
 
         <div className="relative w-full max-w-6xl mx-auto px-5 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+          {/* LEFT — text, now with an engraved chapter badge instead of a bare watermark numeral */}
           <div className="relative order-2 md:order-1">
             <div className="flex items-center gap-3 mb-8">
               <span className="h-px w-10" style={{ background: ACCENT }} />
               <p className="font-body text-[9px] tracking-[0.42em] uppercase" style={{ color: ACCENT }}>The story</p>
             </div>
 
-            <div className="absolute -top-4 right-0 pointer-events-none select-none" aria-hidden>
+            {/* engraved chapter medallion — same construction as the CTA's "Est. 2021" badge */}
+            <div className="absolute -top-2 right-0 md:right-4 pointer-events-none select-none" aria-hidden>
               <AnimatePresence mode="wait">
-                <motion.span key={active} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  className="font-display italic block" style={{ fontSize: "clamp(80px, 11vw, 150px)", lineHeight: 0.8, color: "transparent", WebkitTextStroke: "1.5px rgba(212,168,83,0.28)" }}>
-                  {ch.n}
-                </motion.span>
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, scale: 0.7, rotate: -8 }}
+                  animate={{ opacity: 1, scale: 1, rotate: -4 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="flex flex-col items-center justify-center rounded-full"
+                  style={{
+                    width: "clamp(64px, 8vw, 88px)", height: "clamp(64px, 8vw, 88px)",
+                    background: "linear-gradient(135deg, rgba(240,201,135,0.14), rgba(181,112,63,0.06))",
+                    border: "1px solid rgba(212,168,83,0.35)",
+                  }}
+                >
+                  <span className="font-display italic" style={{ fontSize: "clamp(1.6rem,3vw,2.3rem)", lineHeight: 1, color: "rgba(181,112,63,0.55)" }}>{ch.n}</span>
+                </motion.div>
               </AnimatePresence>
             </div>
 
             <AnimatePresence mode="wait">
-              <motion.div key={active} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }} className="relative">
+              <motion.div key={active} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }} className="relative pr-24 md:pr-0">
                 <p className="font-body text-[10px] tracking-[0.4em] uppercase mb-4" style={{ color: ACCENT }}>{ch.kicker}</p>
                 <h3 className="italic leading-[1.05] mb-6" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(1.9rem, 4.2vw, 3.2rem)", color: "var(--color-ink)", letterSpacing: "-0.025em" }}>
                   {ch.title.split("\n").map((line, li) => (
@@ -214,8 +222,14 @@ function StoryScrolly() {
                     </span>
                   ))}
                 </h3>
-                <p className="font-body text-sm md:text-base leading-[1.95] max-w-md" style={{ color: "rgba(26,34,24,0.6)" }}>{ch.body}</p>
+                <p className="font-body text-sm md:text-base leading-[1.95] max-w-md" style={{ color: "rgba(26,34,24,0.62)" }}>
+                  <span className="italic float-left mr-2.5 mt-0.5" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "2.4rem", lineHeight: "0.78", color: ACCENT }}>
+                    {ch.body.charAt(0)}
+                  </span>
+                  {ch.body.slice(1)}
+                </p>
                 <div className="flex items-center gap-2.5 mt-6">
+                  <span className="w-1.5 h-1.5 rotate-45 flex-shrink-0" style={{ background: GOLD, opacity: 0.85 }} />
                   <span className="h-px w-6" style={{ background: "rgba(212,168,83,0.75)" }} />
                   <span className="font-body text-[10px] tracking-[0.22em] uppercase" style={{ color: "rgba(26,34,24,0.42)" }}>{ch.meta}</span>
                 </div>
@@ -230,14 +244,24 @@ function StoryScrolly() {
             </div>
           </div>
 
+          {/* RIGHT — framed photo, gold corner brackets, caption plate — matching the site's other framed treatments */}
           <div className="relative order-1 md:order-2">
-            <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden" style={{ aspectRatio: "4/5", boxShadow: "0 40px 90px -40px rgba(26,34,24,0.55)" }}>
+            <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden" style={{ aspectRatio: "4/5", boxShadow: "0 45px 100px -40px rgba(26,34,24,0.55)" }}>
               <AnimatePresence>
                 <motion.div key={active} className="absolute inset-0" initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}>
                   <img src={ch.img} alt={ch.meta} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,4,0.6) 0%, transparent 55%)" }} />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,6,4,0.62) 0%, transparent 50%)" }} />
                 </motion.div>
               </AnimatePresence>
+              <div aria-hidden className="absolute inset-3 rounded-xl pointer-events-none" style={{ border: `1px solid ${GOLD}66` }} />
+              <span aria-hidden className="absolute top-5 left-5 w-6 h-6 pointer-events-none" style={{ borderTop: `1px solid ${GOLD}`, borderLeft: `1px solid ${GOLD}`, opacity: 0.85 }} />
+              <span aria-hidden className="absolute bottom-5 right-5 w-6 h-6 pointer-events-none" style={{ borderBottom: `1px solid ${GOLD}`, borderRight: `1px solid ${GOLD}`, opacity: 0.85 }} />
+
+              {/* caption plate */}
+              <div className="absolute bottom-5 left-5 flex items-center gap-2 px-3.5 py-2 rounded-full" style={{ background: "rgba(26,34,24,0.75)", backdropFilter: "blur(6px)" }}>
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD }} />
+                <span className="italic whitespace-nowrap" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "12px", color: "rgba(247,242,232,0.95)" }}>{ch.kicker}</span>
+              </div>
             </div>
             <div className="absolute -left-5 md:-left-8 top-2 bottom-2 w-px hidden md:block" style={{ background: "rgba(36,48,40,0.12)" }}>
               <motion.div className="w-full origin-top" style={{ height: "100%", background: `linear-gradient(to bottom,${GOLD},${ACCENT})`, scaleY: scrollYProgress }} />
@@ -341,15 +365,8 @@ export default function AboutPage() {
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
   const heroOp = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
 
-const statsRef = useRef<HTMLDivElement>(null);
-const [statsInView, setStatsInView] = useState(false);
-useEffect(() => {
-  const el = statsRef.current;
-  if (!el) return;
-  const obs = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setStatsInView(true); }, { threshold: 0.3 });
-  obs.observe(el);
-  return () => obs.disconnect();
-}, []);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const statsInView = useInView(statsRef, { amount: 0.3, once: true });
 
   const hmx = useMotionValue(0);
   const hmy = useMotionValue(0);
@@ -367,8 +384,17 @@ useEffect(() => {
   };
   const heroLeave = () => { hmx.set(0); hmy.set(0); };
 
-  return (
-    <main style={{ background: "var(--color-cream-soft)" }}>
+return (
+    <main style={{ background: "var(--color-cream-soft)", position: "relative" }}>
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none z-[1]"
+        style={{
+          opacity: 0.035,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+        }}
+      />
       <Navbar />
 
       {/* ══ HERO ══ */}
@@ -412,7 +438,8 @@ useEffect(() => {
       <StoryScrolly />
 
       {/* ══ STATS — with tilt ══ */}
-      <section ref={statsRef} className="relative w-full px-5 md:px-12" style={{ borderTop: "1px solid rgba(36,48,40,0.07)" }}>
+      <section ref={statsRef} className="relative w-full px-5 md:px-12 overflow-hidden" style={{ borderTop: "1px solid rgba(36,48,40,0.07)" }}>
+        <div aria-hidden className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 55% 60% at 50% 40%, rgba(194,105,28,0.05) 0%, transparent 70%)" }} />
         <div className="max-w-6xl mx-auto py-16 md:py-20">
           <div className="grid grid-cols-2 md:grid-cols-4 rounded-2xl overflow-hidden" style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.08)" }}>
             {stats.map((s, i) => (
@@ -437,6 +464,27 @@ useEffect(() => {
 
       {/* ══ TWO HOMES — interactive toggle ══ */}
       <TwoHomes />
+
+      {/* ══ GUEST VOICE — a real moment of testimony between the two structured sections ══ */}
+      <section className="relative w-full px-5 md:px-12 py-16 md:py-20" style={{ background: "var(--color-ink)" }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <Reveal>
+            <svg width="28" height="20" viewBox="0 0 32 24" fill={GOLD} className="mx-auto mb-6" style={{ opacity: 0.6 }}>
+              <path d="M0 24V13.8C0 6.2 4.8 1 12.6 0l1.2 4.4C8.4 5.6 6 8.6 6 13h6v11H0zm18 0V13.8C18 6.2 22.8 1 30.6 0l1.2 4.4c-5.4 1.2-7.8 4.2-7.8 8.6h6v11H18z" />
+            </svg>
+            <p className="italic leading-relaxed mb-6" style={{ fontFamily: "var(--font-accent)", fontWeight: 500, fontSize: "clamp(1.3rem,2.6vw,1.8rem)", color: "rgba(247,242,232,0.95)" }}>
+              &ldquo;Felt less like a hotel stay, more like visiting family.&rdquo;
+            </p>
+            <div className="flex items-center justify-center gap-2.5">
+              <span className="h-px w-6" style={{ background: "rgba(212,168,83,0.6)" }} />
+              <p className="font-body text-[10px] tracking-[0.2em] uppercase" style={{ color: "rgba(247,242,232,0.4)" }}>
+                A Guest, on TripAdvisor
+              </p>
+              <span className="h-px w-6" style={{ background: "rgba(212,168,83,0.6)" }} />
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
       {/* ══ WHAT WE BELIEVE ══ */}
       <section className="relative w-full px-5 md:px-12 py-16 md:py-24" style={{ background: "var(--color-cream-soft)", borderTop: "1px solid rgba(36,48,40,0.07)" }}>

@@ -335,7 +335,7 @@ export default function ContactPage() {
                     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d={whatsappIcon} /></svg>, label: "WhatsApp us",
                     content: (
                       <div className="flex items-center justify-center gap-2.5">
-                        {[{ l: "+91 62306 45166", r: "916230645166" }, { l: "+91 99999 75545", r: "919999975545" }, { l: "+91 88005 00292", r: "918800500292" }].map((p) => (
+                        {[{ l: "+91 62306 45166", r: "916230645166" }, { l: "+91 99999 75545", r: "919999975545" }, { l: "+91 91388 81116", r: "919138881116" }].map((p) => (
                           <a key={p.r} href={`https://wa.me/${p.r}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${p.l}`} title={p.l}
                             className="inline-flex items-center justify-center rounded-full transition-all duration-300"
                             style={{ width: 36, height: 36, border: `1px solid rgba(194,105,28,0.35)`, color: ACCENT }}

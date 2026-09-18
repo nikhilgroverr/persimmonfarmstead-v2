@@ -9,7 +9,7 @@ import Link from "next/link";
 
 const slides = [
   {
-    bg: "/images/hero1.png",
+    bg: "/images/hero1.webp",
     word: "Stillness",
     heading: "Where Luxury\nMeets the Wild",
     desc: "Wake up to mist-covered mountains, handcrafted stays, and mornings that begin with nature.",
@@ -17,7 +17,7 @@ const slides = [
     clipY: "52%",
   },
   {
-    bg: "/images/hero2.png",
+    bg: "/images/hero2.webp",
     word: "Retreat",
     heading: "Leave the Noise.\nFind Yourself.",
     desc: "Hidden among forests and valleys, every stay is designed to restore your body and mind.",
@@ -25,7 +25,7 @@ const slides = [
     clipY: "48%",
   },
   {
-    bg: "/images/hero3.png",
+    bg: "/images/hero3.webp",
     word: "Breathe",
     heading: "Every Sunrise\nDeserves a Better View",
     desc: "Experience handcrafted stays where every window frames the beauty of the Himalayas.",
@@ -33,7 +33,7 @@ const slides = [
     clipY: "50%",
   },
   {
-    bg: "/images/hero4.png",
+    bg: "/images/hero4.webp",
     word: "Belong",
     heading: "More Than a Stay.\nA Place to Belong.",
     desc: "From peaceful mornings to starlit evenings, discover memories that stay long after you leave.",

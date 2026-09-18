@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useInView, useReducedMotion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -18,7 +18,9 @@ const properties = [
     tag: "Flagship",
     location: "Badgran (14 Mile) · Manali",
     blurb: "Our flagship boutique hotel, a minute off the highway with mountain views from every room.",
-    img: "/images/farmstead/badagran/gallery-1.png",
+    story:
+      "The original house — three rooms on the sunny side of Badgran, angled to catch the first light over the orchard. This is where the whole thing started, and it's still the one most guests come back to.",
+    img: "/images/farmstead/badagran/gallery-2.webp",
     href: "/stays/farmstead",
   },
   {
@@ -28,7 +30,9 @@ const properties = [
     tag: "Orchard Retreat",
     location: "Shanag (Bahang) · Manali",
     blurb: "Wooden chalets and stone cottages across wide orchard lawns, close to Old Manali.",
-    img: "https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=1200&q=85",
+    story:
+      "When the Farmstead filled up, the family opened a second home above Old Manali — chalets and stone cottages spread across open orchard lawns, close enough to walk into town.",
+    img: "/images/shanag/KIN01880.webp",
     href: "/stays/shanag",
   },
 ];
@@ -39,7 +43,7 @@ const articles = [
     chapter: "01",
     eyebrow: "Extended Stay",
     title: "Stay long enough to stop counting days.",
-    img: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=1200&q=85",
+    img: "/images/shanag/KIN01880.webp",
     caption: "Badgran, 14 Mile · Manali",
     pullQuote: "A month here should cost less per night than a weekend does.",
     chips: ["Weekly Rate", "Meals", "Laundry"],
@@ -54,7 +58,7 @@ const articles = [
     chapter: "02",
     eyebrow: "Corporate",
     title: "Take the whole place. Skip the conference room.",
-    img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=85",
+    img: "/images/shanag/KIN01902.webp",
     caption: "Both homes · Manali",
     pullQuote: "By the second night, fewer people are checking their phones.",
     chips: ["Buyout", "Team", "Events"],
@@ -81,17 +85,236 @@ function Reveal({ children, delay = 0, y = 22 }: { children: React.ReactNode; de
   );
 }
 
+/* ── Proper hero — full-bleed photo, parallax + mouse depth, ghost
+     watermark. Matches the treatment used on Farmstead/Contact/About. ── */
+function AllStaysHero() {
+  const reduce = useReducedMotion();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const heroOp = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+
+  const hmx = useMotionValue(0);
+  const hmy = useMotionValue(0);
+  const hsx = useSpring(hmx, { stiffness: 55, damping: 18 });
+  const hsy = useSpring(hmy, { stiffness: 55, damping: 18 });
+  const bgX = useTransform(hsx, [-0.5, 0.5], ["-14px", "14px"]);
+  const bgY = useTransform(hsy, [-0.5, 0.5], ["-9px", "9px"]);
+  const ghostX = useTransform(hsx, [-0.5, 0.5], ["26px", "-26px"]);
+  const ghostY = useTransform(hsy, [-0.5, 0.5], ["16px", "-16px"]);
+  const heroMove = (e: React.MouseEvent) => {
+    if (reduce) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    hmx.set((e.clientX - r.left) / r.width - 0.5);
+    hmy.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  const heroLeave = () => { hmx.set(0); hmy.set(0); };
+
+  return (
+    <section
+      ref={heroRef}
+      onMouseMove={heroMove}
+      onMouseLeave={heroLeave}
+      className="relative w-full overflow-hidden"
+      style={{ height: "78vh", minHeight: "560px", maxHeight: "900px", background: "#060806" }}
+    >
+    <motion.div className="absolute inset-0" style={{ y: imgY, scale: imgScale }}>
+      <motion.img
+        src="/images/hero3.webp"
+        alt="Persimmon Farmstead"
+        className="w-full h-full object-cover"
+        style={{ filter: "brightness(0.52) saturate(0.88)", x: bgX, y: bgY, scale: 1.06 }}
+      />
+    </motion.div>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(6,8,6,0.28) 0%, rgba(6,8,6,0.08) 40%, rgba(6,8,6,0.92) 100%)" }} />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(6,8,6,0.45) 0%, transparent 60%)" }} />
+
+      <div className="absolute inset-0 flex items-center justify-end pr-4 md:pr-14 pointer-events-none overflow-hidden" aria-hidden>
+        <motion.span
+          className="italic select-none whitespace-nowrap"
+          style={{
+            fontFamily: "var(--font-accent)", fontWeight: 600,
+            fontSize: "clamp(70px,15vw,220px)", letterSpacing: "-0.03em",
+            color: "transparent", WebkitTextStroke: "1px rgba(247,242,232,0.06)", lineHeight: 1,
+            x: ghostX, y: ghostY,
+          }}
+        >
+          Our Stays
+        </motion.span>
+      </div>
+
+<motion.div className="absolute bottom-0 left-0 right-0 z-10 pb-14 md:pb-20" style={{ opacity: heroOp }}>
+  <div className="max-w-6xl mx-auto px-5 md:px-12">
+    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-10">
+      {/* LEFT — title block */}
+      <div>
+        <Reveal>
+          <div className="flex items-center gap-3 mb-4">
+            <motion.span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD }} animate={{ opacity: [1, 0.35, 1] }} transition={{ duration: 2.5, repeat: Infinity }} />
+            <span className="font-body text-[10px] tracking-[0.32em] uppercase" style={{ color: "rgba(212,168,83,0.8)" }}>
+              Two Homes · One Family
+            </span>
+          </div>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <h1 className="italic leading-[1.02] mb-5" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(2.6rem,7vw,5.4rem)", letterSpacing: "-0.02em", color: "rgba(247,242,232,0.98)", textShadow: "0 8px 40px rgba(0,0,0,0.5)" }}>
+            All our stays.
+          </h1>
+        </Reveal>
+        <Reveal delay={0.14}>
+          <div style={{ height: "1.5px", width: "60px", background: "linear-gradient(to right, rgba(212,168,83,0.9), transparent)", borderRadius: "2px" }} />
+        </Reveal>
+      </div>
+
+      {/* RIGHT — small framed featured photo, its own short heading + line */}
+      <Reveal delay={0.2}>
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="relative overflow-hidden rounded-2xl flex-shrink-0" style={{ width: "clamp(84px, 12vw, 118px)", aspectRatio: "4/5", boxShadow: "0 30px 60px -25px rgba(0,0,0,0.6)" }}>
+            <img src="/images/hero3.webp" alt="A quiet corner of the farmstead" className="absolute inset-0 w-full h-full object-cover" />
+            <div aria-hidden className="absolute inset-1.5 rounded-xl pointer-events-none" style={{ border: `1px solid ${GOLD}88` }} />
+          </div>
+          <div className="max-w-[180px]">
+            <p className="font-body text-[9px] tracking-[0.2em] uppercase mb-1.5" style={{ color: "rgba(212,168,83,0.85)" }}>Every corner</p>
+            <p className="font-body leading-relaxed" style={{ fontSize: "12.5px", color: "rgba(247,242,232,0.65)" }}>
+              A quiet moment, somewhere on the property.
+            </p>
+          </div>
+        </div>
+      </Reveal>
+    </div>
+  </div>
+</motion.div>
+    </section>
+  );
+}
+
+
+/* ── Editorial hero — a real opening paragraph, not a photo slideshow.
+     Text carries the section; an asymmetric photo collage sits beside it
+     rather than behind it. ── */
+function HeroArticle() {
+  return (
+    <section className="relative w-full pt-36 pb-16 md:pt-44 md:pb-24 px-5 md:px-12" style={{ background: "var(--color-cream-soft)" }}>
+      <span
+        aria-hidden
+        className="hidden lg:block absolute select-none pointer-events-none italic"
+        style={{ fontFamily: "var(--font-accent)", fontWeight: 600, top: "-1rem", right: "1rem", fontSize: "14rem", lineHeight: 1, color: "rgba(36,48,40,0.04)" }}
+      >
+        02
+      </span>
+
+      <div className="relative max-w-6xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        {/* LEFT — the article itself */}
+        <div className="lg:col-span-7">
+          <Reveal>
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px w-10" style={{ background: ACCENT, opacity: 0.7 }} />
+              <p className="font-body text-[9px] tracking-[0.42em] uppercase" style={{ color: ACCENT }}>Two Homes · One Family</p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.06}>
+            <h1
+              className="italic leading-[1.04] mb-8"
+              style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(2.4rem,5.4vw,4.2rem)", letterSpacing: "-0.02em", color: "var(--color-ink)" }}
+            >
+              All our stays.
+            </h1>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <p className="font-body leading-[1.95] max-w-[58ch]" style={{ fontSize: "clamp(1rem,0.9rem + 0.3vw,1.15rem)", color: "rgba(26,34,24,0.78)" }}>
+              <span
+                className="font-display italic float-left mr-3 mt-1"
+                style={{ fontSize: "clamp(3rem,7vw,3.8rem)", lineHeight: "0.78", color: ACCENT }}
+              >
+                S
+              </span>
+              even rooms, two corners of the same valley. Persimmon began as a single house at Badgran, three rooms angled toward the first light — and when it filled up, season after season, the family opened a second home above Old Manali instead of just adding more rooms to the first.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.16}>
+            <p className="font-body leading-[1.9] max-w-[58ch] mt-6" style={{ fontSize: "14.5px", color: "rgba(26,34,24,0.62)" }}>
+              Both homes still run on the same idea: the people who greet you actually live there, the kitchen cooks whatever the day's market gave it, and nothing is on a fixed schedule but you. Below, a full look at every room across both properties — and further down, a couple of longer pieces on staying a while, or taking the whole place for your own group.
+            </p>
+          </Reveal>
+
+          <Reveal delay={0.24}>
+            <div className="flex flex-wrap items-center gap-3 mt-10">
+              {properties.map((p) => (
+                <a key={p.slug}
+                  href={`#${p.slug}`}
+                  className="group inline-flex items-center gap-2.5 font-body text-[12px] tracking-[0.1em] uppercase rounded-full px-5 py-3 transition-all duration-300"
+                  style={{ border: `1px solid rgba(194,105,28,0.4)`, color: ACCENT }}
+                >
+                  {p.name}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" className="transition-transform duration-300 group-hover:translate-y-0.5"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+                </a>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+
+        {/* RIGHT — asymmetric photo collage, not a full-bleed background */}
+        <div className="lg:col-span-5 relative">
+          <Reveal delay={0.14} y={30}>
+            <div className="relative">
+              <div className="relative overflow-hidden rounded-[22px]" style={{ aspectRatio: "4/4.2", boxShadow: "0 50px 100px -40px rgba(43,27,17,0.42)" }}>
+                <img src={properties[0].img} alt={properties[0].name} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,19,15,0.7) 0%, transparent 45%)" }} />
+                <div aria-hidden className="absolute inset-2 rounded-2xl pointer-events-none" style={{ border: `1px solid ${GOLD}77` }} />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <p className="font-body text-[9px] tracking-[0.24em] uppercase mb-1.5" style={{ color: "rgba(212,168,83,0.9)" }}>{properties[0].location}</p>
+                  <p className="italic leading-tight" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "17px", color: "rgba(247,242,232,0.97)" }}>{properties[0].name}</p>
+                </div>
+              </div>
+
+              {/* second photo, offset and layered over the first */}
+              <div
+                className="absolute overflow-hidden rounded-2xl"
+                style={{
+                  width: "52%", aspectRatio: "4/5",
+                  bottom: "-9%", left: "-10%",
+                  boxShadow: "0 40px 80px -30px rgba(43,27,17,0.5)",
+                  border: "5px solid #fffdf8",
+                }}
+              >
+                <img src={properties[1].img} alt={properties[1].name} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,19,15,0.55) 0%, transparent 50%)" }} />
+                <p className="absolute bottom-3 left-3 right-3 italic leading-tight" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "12px", color: "rgba(247,242,232,0.95)" }}>
+                  {properties[1].name}
+                </p>
+              </div>
+
+              {/* small gold badge floating near the top corner */}
+              <span
+                className="absolute font-body text-[10px] tracking-[0.15em] uppercase rounded-full px-4 py-2"
+                style={{ top: -14, right: -10, background: "#fffdf8", color: "#8a5328", border: "1px solid rgba(181,112,63,0.3)", boxShadow: "0 8px 20px -8px rgba(43,27,17,0.3)" }}
+              >
+                Est. 2021
+              </span>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Room card — richer finish: larger radius, engraved numeral, warmer hover ── */
 function RoomCard({ room, i }: { room: (typeof allRooms)[number]; i: number }) {
   return (
     <Reveal delay={i * 0.07}>
       <Link
         href={`/rooms/${room.slug}`}
-        className="group flex flex-col h-full rounded-[22px] overflow-hidden transition-transform duration-500 hover:-translate-y-2"
+        className="group flex flex-col h-full rounded-[24px] overflow-hidden transition-all duration-500 hover:-translate-y-2"
         style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.08)", boxShadow: "0 30px 60px -36px rgba(43,27,17,0.45)" }}
       >
         <div className="relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
           <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.08]" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,19,15,0.5), transparent 55%)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,19,15,0.55), transparent 55%)" }} />
           <div className="absolute top-4 left-4">
             <span className="font-body text-[9px] tracking-[0.22em] uppercase px-3.5 py-1.5 rounded-full" style={{ background: "rgba(247,242,232,0.94)", color: "#8a5328", border: "1px solid rgba(181,112,63,0.28)" }}>
               {room.tag}
@@ -128,6 +351,8 @@ function RoomCard({ room, i }: { room: (typeof allRooms)[number]; i: number }) {
   );
 }
 
+/* ── Property section — banner photo, a short narrative intro alongside
+     it (not just a floating blurb), then the room grid. ── */
 function PropertyCategory({ property }: { property: (typeof properties)[number] }) {
   const rooms = allRooms.filter((r) => r.property === property.slug);
   return (
@@ -173,8 +398,15 @@ function PropertyCategory({ property }: { property: (typeof properties)[number] 
           </div>
         </Reveal>
 
-        <Reveal delay={0.08}>
-          <div className="flex items-center gap-4 mb-12 md:mb-14 mt-8">
+        {/* short narrative intro — ties the property to the site's real story */}
+        <Reveal delay={0.06}>
+          <p className="font-body leading-[1.9] max-w-[62ch] mt-8 mb-10 md:mb-14" style={{ fontSize: "14.5px", color: "rgba(26,34,24,0.6)" }}>
+            {property.story}
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.1}>
+          <div className="flex items-center gap-4 mb-12 md:mb-14">
             <p className="font-body text-[10.5px] tracking-[0.2em] uppercase flex-shrink-0" style={{ color: "rgba(26,34,24,0.5)" }}>
               {rooms.length} {rooms.length === 1 ? "Room" : "Rooms"} At This Property
             </p>
@@ -196,7 +428,6 @@ function PropertyCategory({ property }: { property: (typeof properties)[number] 
 function ArticleSection({ article, imageSide }: { article: (typeof articles)[number]; imageSide: "left" | "right" }) {
   return (
     <section id={article.id} className="relative w-full overflow-hidden py-20 md:py-32 px-5 md:px-12" style={{ background: "#f2ecdc", borderTop: "1px solid rgba(36,48,40,0.07)", scrollMarginTop: "88px" }}>
-      {/* giant faint watermark quote mark, behind everything */}
       <span
         aria-hidden
         className="hidden md:block absolute select-none pointer-events-none italic"
@@ -258,7 +489,6 @@ function ArticleSection({ article, imageSide }: { article: (typeof articles)[num
                 </p>
               </Reveal>
 
-              {/* pull-quote, dropped in after the first paragraph */}
               {pi === 0 && (
                 <Reveal delay={0.14}>
                   <div className="my-9 pl-6 md:pl-8 relative max-w-[54ch]">
@@ -304,70 +534,11 @@ export default function AllStaysPage() {
     <main style={{ background: "var(--color-cream-soft)" }}>
       <Navbar />
 
-      {/* HERO — split hero: each property's photo on its own half, title
-          centered across both, each half links straight to that property */}
-      <section className="relative w-full overflow-hidden" style={{ height: "88vh", minHeight: "620px" }}>
-        <div className="absolute inset-0 flex flex-col md:flex-row">
-          {properties.map((p) => (
-            <Link
-              key={p.slug}
-              href={p.href}
-              className="group relative flex-1 overflow-hidden"
-            >
-              <img
-                src={p.img}
-                alt={p.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
-                style={{ filter: "brightness(0.5) saturate(0.92)" }}
-              />
-              <div className="absolute inset-0 transition-colors duration-500" style={{ background: "rgba(8,14,10,0.15)" }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 0%, rgba(8,14,10,0.15) 60%, rgba(8,14,10,0.85) 100%)" }} />
+      {/* HERO — proper full-bleed hero with title */}
+      <AllStaysHero />
 
-              {/* per-property label, bottom of its own half — doubles as the link's call to action */}
-              <div className="absolute bottom-8 md:bottom-12 left-6 md:left-10 right-6 md:right-10 flex items-end justify-between">
-                <div>
-                  <p className="font-body text-[9px] tracking-[0.26em] uppercase mb-1.5" style={{ color: "rgba(212,168,83,0.85)" }}>{p.location}</p>
-                  <p className="italic leading-tight" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(1.3rem,2.4vw,1.8rem)", color: "rgba(247,242,232,0.95)" }}>
-                    {p.name}
-                  </p>
-                </div>
-                <span className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[rgba(212,168,83,0.15)]"
-                  style={{ border: "1px solid rgba(212,168,83,0.5)", color: GOLD }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* vertical gold divider between the two halves (desktop only) */}
-        <div aria-hidden className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, rgba(212,168,83,0.5) 20%, rgba(212,168,83,0.5) 80%, transparent)" }} />
-
-        {/* dark band across the vertical middle so the centered title reads clearly over either photo */}
-        <div aria-hidden className="absolute inset-x-0 top-[30%] h-[40%] z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, rgba(8,14,10,0.55) 35%, rgba(8,14,10,0.55) 65%, transparent)" }} />
-
-        {/* centered title, overlaid on top of both halves */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
-          <Reveal>
-            <div className="flex items-center gap-3 mb-6 justify-center">
-              <motion.span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD }} animate={{ opacity: [1, 0.35, 1] }} transition={{ duration: 2.5, repeat: Infinity }} />
-              <span className="font-body tracking-[0.34em] uppercase" style={{ fontSize: "clamp(9px,2.2vw,11px)", color: "rgba(212,168,83,0.85)" }}>
-                Two Homes · One Family
-              </span>
-            </div>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <h1 className="italic leading-[0.98] mb-5" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(2.6rem,7vw,5.6rem)", letterSpacing: "-0.02em", color: "rgba(247,242,232,0.98)", textShadow: "0 10px 50px rgba(0,0,0,0.6)" }}>
-              All our stays.
-            </h1>
-          </Reveal>
-          <Reveal delay={0.14}>
-            <p className="font-body leading-[1.8] max-w-md mx-auto" style={{ fontSize: "clamp(13px,3.2vw,16px)", color: "rgba(247,242,232,0.8)", textShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>
-              Seven rooms, two corners of the same valley — pick a photo to begin.
-            </p>
-          </Reveal>
-        </div>
-      </section>
+      {/* INTRO ARTICLE — the editorial content section, now positioned below the hero */}
+      <HeroArticle />
 
       {/* PROPERTY CATEGORIES */}
       {properties.map((property) => (
