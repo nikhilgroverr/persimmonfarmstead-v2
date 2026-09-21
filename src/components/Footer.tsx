@@ -26,8 +26,8 @@ const FACEBOOK_URL = "https://www.facebook.com/PersimmonFarmstead";
 
 const whatsappNumbers = [
   { label: "Reservations", display: "+91 62306 45166", href: "tel:+916230645166" },
-  { label: "Bookings", display: "+91 99999 75545", href: "tel:+919999975545" },
   { label: "Front desk", display: "+91 91388 81116", href: "tel:+919138881116" },
+  { label: "Bookings", display: "+91 99999 75545", href: "tel:+919999975545" },
 ];
 
 /* ── Real, recognizable brand glyphs — muted by default, filling with the

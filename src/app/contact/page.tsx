@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion, useMotionValue, useSpring } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 
 const ACCENT = "#c2691c";
 const GOLD = "#d4a853";
+const PRIMARY_WHATSAPP = "916230645166";
 
 const properties = [
   {
@@ -139,6 +140,577 @@ function LocationCard({ property, i }: { property: (typeof properties)[0]; i: nu
   );
 }
 
+
+function PropertyDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const options = ["Either — help me choose", "Persimmon Farmstead", "Persimmon Farmstead Shanag"];
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between rounded-xl px-4 py-3 font-body text-sm bg-transparent transition-colors duration-200 outline-none"
+        style={{ border: `1px solid ${open ? ACCENT : "rgba(36,48,40,0.15)"}`, color: "var(--color-ink)" }}
+      >
+        <span className="truncate">{value}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }} style={{ color: ACCENT, flexShrink: 0, marginLeft: 8 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" /></svg>
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 right-0 mt-2 rounded-xl overflow-hidden z-30"
+            style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.12)", boxShadow: "0 24px 50px -20px rgba(43,27,17,0.35)" }}
+          >
+            {options.map((opt) => {
+              const selected = opt === value;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { onChange(opt); setOpen(false); }}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left font-body text-sm transition-colors duration-150"
+                  style={{
+                    color: selected ? ACCENT : "var(--color-ink)",
+                    background: selected ? "rgba(194,105,28,0.06)" : "transparent",
+                  }}
+                  onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = "rgba(194,105,28,0.04)"; }}
+                  onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <span>{opt}</span>
+                  {selected && (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.6"><path d="M5 13l4 4L19 7" /></svg>
+                  )}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+function DatePicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const selectedDate = value ? new Date(value + "T00:00:00") : null;
+  const [viewMonth, setViewMonth] = useState(selectedDate ?? today);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthLabel = viewMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const cells: (number | null)[] = [
+    ...Array(startWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  const toISO = (d: number) => {
+    const dt = new Date(year, month, d);
+    return dt.toISOString().split("T")[0];
+  };
+
+  const isPast = (d: number) => new Date(year, month, d) < today;
+  const isSelected = (d: number) =>
+    selectedDate && selectedDate.getFullYear() === year && selectedDate.getMonth() === month && selectedDate.getDate() === d;
+  const isToday = (d: number) =>
+    today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+
+  const canGoPrevMonth = year > today.getFullYear() || (year === today.getFullYear() && month > today.getMonth());
+
+  const displayLabel = selectedDate
+    ? selectedDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+    : "Select a date";
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between rounded-xl px-4 py-3 font-body text-sm bg-transparent transition-colors duration-200 outline-none"
+        style={{ border: `1px solid ${open ? ACCENT : "rgba(36,48,40,0.15)"}`, color: selectedDate ? "var(--color-ink)" : "rgba(26,34,24,0.4)" }}
+      >
+        <span>{displayLabel}</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="1.8" style={{ flexShrink: 0 }}>
+          <rect x="3" y="4" width="18" height="18" rx="3" /><path d="M3 9h18M8 2v4M16 2v4" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 mt-2 rounded-2xl overflow-hidden z-30 p-4"
+            style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.12)", boxShadow: "0 30px 60px -24px rgba(43,27,17,0.4)", width: "300px" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={() => canGoPrevMonth && setViewMonth(new Date(year, month - 1, 1))}
+                disabled={!canGoPrevMonth}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150 disabled:opacity-25"
+                style={{ color: ACCENT }}
+                onMouseEnter={(e) => canGoPrevMonth && (e.currentTarget.style.background = "rgba(194,105,28,0.08)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M15 18l-6-6 6-6" /></svg>
+              </button>
+              <p className="italic" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "14.5px", color: "var(--color-ink)" }}>{monthLabel}</p>
+              <button
+                type="button"
+                onClick={() => setViewMonth(new Date(year, month + 1, 1))}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150"
+                style={{ color: ACCENT }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(194,105,28,0.08)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M9 18l6-6-6-6" /></svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 mb-1.5">
+              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                <div key={i} className="text-center font-body text-[9px] tracking-wide uppercase py-1" style={{ color: "rgba(26,34,24,0.35)" }}>{d}</div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {cells.map((d, i) =>
+                d === null ? (
+                  <div key={i} />
+                ) : (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={isPast(d)}
+                    onClick={() => { onChange(toISO(d)); setOpen(false); }}
+                    className="aspect-square rounded-full flex items-center justify-center font-body text-[12.5px] transition-colors duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
+                    style={{
+                      background: isSelected(d) ? ACCENT : "transparent",
+                      color: isSelected(d) ? "#fff" : "var(--color-ink)",
+                      border: isToday(d) && !isSelected(d) ? `1px solid ${ACCENT}` : "1px solid transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!isSelected(d) && !isPast(d)) e.currentTarget.style.background = "rgba(194,105,28,0.1)"; }}
+                    onMouseLeave={(e) => { if (!isSelected(d)) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    {d}
+                  </button>
+                )
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+type Country = { name: string; iso: string; dial: string; digits: number; flag: string; pattern?: RegExp };
+
+const countries: Country[] = [
+  { name: "India", iso: "IN", dial: "+91", digits: 10, flag: "🇮🇳", pattern: /^[6-9]\d{9}$/ },
+  { name: "United States", iso: "US", dial: "+1", digits: 10, flag: "🇺🇸" },
+  { name: "United Kingdom", iso: "GB", dial: "+44", digits: 10, flag: "🇬🇧" },
+  { name: "Canada", iso: "CA", dial: "+1", digits: 10, flag: "🇨🇦" },
+  { name: "Australia", iso: "AU", dial: "+61", digits: 9, flag: "🇦🇺" },
+  { name: "United Arab Emirates", iso: "AE", dial: "+971", digits: 9, flag: "🇦🇪" },
+  { name: "Singapore", iso: "SG", dial: "+65", digits: 8, flag: "🇸🇬" },
+  { name: "Germany", iso: "DE", dial: "+49", digits: 10, flag: "🇩🇪" },
+  { name: "France", iso: "FR", dial: "+33", digits: 9, flag: "🇫🇷" },
+  { name: "Italy", iso: "IT", dial: "+39", digits: 10, flag: "🇮🇹" },
+  { name: "Spain", iso: "ES", dial: "+34", digits: 9, flag: "🇪🇸" },
+  { name: "Netherlands", iso: "NL", dial: "+31", digits: 9, flag: "🇳🇱" },
+  { name: "Switzerland", iso: "CH", dial: "+41", digits: 9, flag: "🇨🇭" },
+  { name: "Sweden", iso: "SE", dial: "+46", digits: 9, flag: "🇸🇪" },
+  { name: "Norway", iso: "NO", dial: "+47", digits: 8, flag: "🇳🇴" },
+  { name: "Denmark", iso: "DK", dial: "+45", digits: 8, flag: "🇩🇰" },
+  { name: "Ireland", iso: "IE", dial: "+353", digits: 9, flag: "🇮🇪" },
+  { name: "Portugal", iso: "PT", dial: "+351", digits: 9, flag: "🇵🇹" },
+  { name: "Belgium", iso: "BE", dial: "+32", digits: 9, flag: "🇧🇪" },
+  { name: "Austria", iso: "AT", dial: "+43", digits: 10, flag: "🇦🇹" },
+  { name: "Poland", iso: "PL", dial: "+48", digits: 9, flag: "🇵🇱" },
+  { name: "Russia", iso: "RU", dial: "+7", digits: 10, flag: "🇷🇺" },
+  { name: "China", iso: "CN", dial: "+86", digits: 11, flag: "🇨🇳" },
+  { name: "Japan", iso: "JP", dial: "+81", digits: 10, flag: "🇯🇵" },
+  { name: "South Korea", iso: "KR", dial: "+82", digits: 10, flag: "🇰🇷" },
+  { name: "Hong Kong", iso: "HK", dial: "+852", digits: 8, flag: "🇭🇰" },
+  { name: "Taiwan", iso: "TW", dial: "+886", digits: 9, flag: "🇹🇼" },
+  { name: "Thailand", iso: "TH", dial: "+66", digits: 9, flag: "🇹🇭" },
+  { name: "Malaysia", iso: "MY", dial: "+60", digits: 9, flag: "🇲🇾" },
+  { name: "Indonesia", iso: "ID", dial: "+62", digits: 10, flag: "🇮🇩" },
+  { name: "Philippines", iso: "PH", dial: "+63", digits: 10, flag: "🇵🇭" },
+  { name: "Vietnam", iso: "VN", dial: "+84", digits: 9, flag: "🇻🇳" },
+  { name: "Pakistan", iso: "PK", dial: "+92", digits: 10, flag: "🇵🇰" },
+  { name: "Bangladesh", iso: "BD", dial: "+880", digits: 10, flag: "🇧🇩" },
+  { name: "Sri Lanka", iso: "LK", dial: "+94", digits: 9, flag: "🇱🇰" },
+  { name: "Nepal", iso: "NP", dial: "+977", digits: 10, flag: "🇳🇵" },
+  { name: "Saudi Arabia", iso: "SA", dial: "+966", digits: 9, flag: "🇸🇦" },
+  { name: "Qatar", iso: "QA", dial: "+974", digits: 8, flag: "🇶🇦" },
+  { name: "Kuwait", iso: "KW", dial: "+965", digits: 8, flag: "🇰🇼" },
+  { name: "Oman", iso: "OM", dial: "+968", digits: 8, flag: "🇴🇲" },
+  { name: "Bahrain", iso: "BH", dial: "+973", digits: 8, flag: "🇧🇭" },
+  { name: "Israel", iso: "IL", dial: "+972", digits: 9, flag: "🇮🇱" },
+  { name: "Turkey", iso: "TR", dial: "+90", digits: 10, flag: "🇹🇷" },
+  { name: "South Africa", iso: "ZA", dial: "+27", digits: 9, flag: "🇿🇦" },
+  { name: "Nigeria", iso: "NG", dial: "+234", digits: 10, flag: "🇳🇬" },
+  { name: "Kenya", iso: "KE", dial: "+254", digits: 9, flag: "🇰🇪" },
+  { name: "Egypt", iso: "EG", dial: "+20", digits: 10, flag: "🇪🇬" },
+  { name: "Brazil", iso: "BR", dial: "+55", digits: 11, flag: "🇧🇷" },
+  { name: "Mexico", iso: "MX", dial: "+52", digits: 10, flag: "🇲🇽" },
+  { name: "Argentina", iso: "AR", dial: "+54", digits: 10, flag: "🇦🇷" },
+  { name: "Chile", iso: "CL", dial: "+56", digits: 9, flag: "🇨🇱" },
+  { name: "Colombia", iso: "CO", dial: "+57", digits: 10, flag: "🇨🇴" },
+  { name: "New Zealand", iso: "NZ", dial: "+64", digits: 9, flag: "🇳🇿" },
+  { name: "Finland", iso: "FI", dial: "+358", digits: 9, flag: "🇫🇮" },
+  { name: "Greece", iso: "GR", dial: "+30", digits: 10, flag: "🇬🇷" },
+  { name: "Czech Republic", iso: "CZ", dial: "+420", digits: 9, flag: "🇨🇿" },
+  { name: "Hungary", iso: "HU", dial: "+36", digits: 9, flag: "🇭🇺" },
+  { name: "Romania", iso: "RO", dial: "+40", digits: 9, flag: "🇷🇴" },
+  { name: "Ukraine", iso: "UA", dial: "+380", digits: 9, flag: "🇺🇦" },
+  { name: "Iceland", iso: "IS", dial: "+354", digits: 7, flag: "🇮🇸" },
+];
+
+function CountryCodeDropdown({ value, onChange }: { value: Country; onChange: (c: Country) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const filtered = countries.filter(
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.dial.includes(search)
+  );
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3 font-body text-sm bg-transparent transition-colors duration-200 outline-none"
+        style={{ border: `1px solid ${open ? ACCENT : "rgba(36,48,40,0.15)"}`, color: "var(--color-ink)" }}
+      >
+        <span className="flex items-center gap-2 truncate">
+          <span>{value.flag}</span>
+          <span className="tabular-nums">{value.dial}</span>
+        </span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }} style={{ color: ACCENT, flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 9l6 6 6-6" /></svg>
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 mt-2 rounded-xl overflow-hidden z-30"
+            style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.12)", boxShadow: "0 30px 60px -24px rgba(43,27,17,0.4)", width: "min(300px, 80vw)" }}
+          >
+            <div className="p-2.5" style={{ borderBottom: "1px solid rgba(36,48,40,0.08)" }}>
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search country or code…"
+                className="w-full rounded-lg px-3 py-2 font-body text-[13px] outline-none"
+                style={{ border: "1px solid rgba(36,48,40,0.12)", color: "var(--color-ink)" }}
+              />
+            </div>
+            <div style={{ maxHeight: "260px", overflowY: "auto" }}>
+              {filtered.length === 0 && (
+                <p className="px-4 py-4 font-body text-[13px]" style={{ color: "rgba(26,34,24,0.4)" }}>No matches.</p>
+              )}
+              {filtered.map((c) => {
+                const selected = c.iso === value.iso;
+                return (
+                  <button
+                    key={c.iso}
+                    type="button"
+                    onClick={() => { onChange(c); setOpen(false); setSearch(""); }}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left font-body text-[13px] transition-colors duration-150"
+                    style={{ color: selected ? ACCENT : "var(--color-ink)", background: selected ? "rgba(194,105,28,0.06)" : "transparent" }}
+                    onMouseEnter={(e) => { if (!selected) e.currentTarget.style.background = "rgba(194,105,28,0.04)"; }}
+                    onMouseLeave={(e) => { if (!selected) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <span>{c.flag}</span>
+                      <span className="truncate">{c.name}</span>
+                    </span>
+                    <span className="tabular-nums flex-shrink-0" style={{ color: "rgba(26,34,24,0.45)" }}>{c.dial}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+/* ── Enquiry form — no backend needed: composes a pre-filled WhatsApp
+     message (primary path, matches the site's "WhatsApp us" promise) with
+     a plain-email fallback link built from the same fields. ── */
+function EnquiryForm() {
+  const [country, setCountry] = useState<Country>(countries[0]);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    property: "Either — help me choose",
+    guests: "",
+    checkIn: "",
+    message: "",
+  });
+
+  const update = (field: keyof typeof form) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, country.digits);
+    setForm((f) => ({ ...f, phone: digitsOnly }));
+  };
+
+  const phoneValid = country.pattern
+    ? country.pattern.test(form.phone)
+    : form.phone.length === country.digits;
+
+  const summaryLines = [
+    `New enquiry from the website:`,
+    `Name: ${form.name || "—"}`,
+    `Phone: ${form.phone ? `${country.dial} ${form.phone}` : "—"}`,
+    `Property: ${form.property}`,
+    form.guests && `Guests: ${form.guests}`,
+    form.checkIn && `Check-in: ${form.checkIn}`,
+    form.message && `Message: ${form.message}`,
+  ].filter(Boolean);
+
+  const waHref = `https://wa.me/${PRIMARY_WHATSAPP}?text=${encodeURIComponent(summaryLines.join("\n"))}`;
+  const mailHref = `mailto:reservations@persimmonfarmstead.com?subject=${encodeURIComponent(
+    "Booking enquiry — " + (form.name || "Website visitor")
+  )}&body=${encodeURIComponent(summaryLines.join("\n"))}`;
+
+  const canSend = form.name.trim().length > 0 && phoneValid;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSend) return;
+    window.open(waHref, "_blank", "noopener,noreferrer");
+  };
+
+  const inputClass =
+    "w-full rounded-xl px-4 py-3 font-body text-sm bg-transparent transition-colors duration-200 outline-none";
+  const inputStyle = { border: "1px solid rgba(36,48,40,0.15)", color: "var(--color-ink)" } as const;
+
+  return (
+    <div className="relative max-w-3xl mx-auto mt-8">
+      <Reveal delay={0.1}>
+        <motion.form
+          onSubmit={handleSubmit}
+          className="relative px-6 py-10 md:px-14 md:py-14 rounded-[32px] overflow-hidden"
+          style={{ background: "#fffdf8", border: "1px solid rgba(36,48,40,0.08)", boxShadow: "0 45px 90px -35px rgba(43,27,17,0.42)" }}
+        >
+          <span aria-hidden className="absolute top-5 left-5 w-6 h-6 pointer-events-none" style={{ borderTop: `1px solid ${GOLD}`, borderLeft: `1px solid ${GOLD}`, opacity: 0.7 }} />
+          <span aria-hidden className="absolute bottom-5 right-5 w-6 h-6 pointer-events-none" style={{ borderBottom: `1px solid ${GOLD}`, borderRight: `1px solid ${GOLD}`, opacity: 0.7 }} />
+
+          <div className="text-center mb-9 md:mb-11">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="h-px w-8" style={{ background: ACCENT, opacity: 0.7 }} />
+              <p className="font-body text-[9px] tracking-[0.44em] uppercase" style={{ color: ACCENT }}>Or, tell us here</p>
+              <span className="h-px w-8" style={{ background: ACCENT, opacity: 0.7 }} />
+            </div>
+            <h3 className="italic leading-tight" style={{ fontFamily: "var(--font-accent)", fontWeight: 600, fontSize: "clamp(1.6rem,3.6vw,2.3rem)", color: "var(--color-ink)" }}>
+              Tell us about your stay.
+            </h3>
+          </div>
+
+          <div className="mb-5">
+            <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+              Your name *
+            </label>
+            <input
+              required
+              type="text"
+              value={form.name}
+              onChange={update("name")}
+              placeholder="Full name"
+              className={inputClass}
+              style={inputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = ACCENT)}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(36,48,40,0.15)")}
+            />
+          </div>
+
+          <div className="grid grid-cols-[auto_1fr] gap-3 mb-1">
+            <div style={{ width: "128px" }}>
+              <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+                Country
+              </label>
+              <CountryCodeDropdown value={country} onChange={(c) => { setCountry(c); setForm((f) => ({ ...f, phone: "" })); }} />
+            </div>
+            <div>
+              <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+                Phone number *
+              </label>
+              <input
+                required
+                type="tel"
+                inputMode="numeric"
+                value={form.phone}
+                onChange={handlePhoneChange}
+                placeholder={"0".repeat(country.digits)}
+                className={inputClass}
+                style={{ ...inputStyle, borderColor: form.phone.length > 0 && !phoneValid ? "#c0392b" : inputStyle.border ? undefined : undefined }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = ACCENT)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = form.phone.length > 0 && !phoneValid ? "#c0392b" : "rgba(36,48,40,0.15)")}
+              />
+            </div>
+          </div>
+          <p className="font-body text-[10.5px] mb-5" style={{ color: form.phone.length > 0 && !phoneValid ? "#c0392b" : "rgba(26,34,24,0.4)" }}>
+            {form.phone.length > 0 && !phoneValid
+              ? country.iso === "IN"
+                ? "Indian mobile numbers are 10 digits and start with 6, 7, 8, or 9."
+                : `${country.name} numbers need exactly ${country.digits} digits — you've entered ${form.phone.length}.`
+              : `${country.name} numbers are ${country.digits} digits, not including the ${country.dial} code.`}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
+            <div className="sm:col-span-2">
+              <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+                Which property?
+              </label>
+              <PropertyDropdown
+                value={form.property}
+                onChange={(v) => setForm((f) => ({ ...f, property: v }))}
+              />
+            </div>
+            <div>
+              <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+                Guests
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={form.guests}
+                onChange={update("guests")}
+                placeholder="2"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = ACCENT)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(36,48,40,0.15)")}
+              />
+            </div>
+          </div>
+
+          <div className="mb-5">
+            <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+              Approximate check-in date
+            </label>
+            <DatePicker
+              value={form.checkIn}
+              onChange={(v) => setForm((f) => ({ ...f, checkIn: v }))}
+            />
+          </div>
+
+          <div className="mb-8">
+            <label className="block font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "rgba(26,34,24,0.5)" }}>
+              Anything else we should know?
+            </label>
+            <textarea
+              rows={4}
+              value={form.message}
+              onChange={update("message")}
+              placeholder="Dates, special requests, questions — whatever's useful."
+              className={`${inputClass} resize-none`}
+              style={inputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = ACCENT)}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(36,48,40,0.15)")}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              type="submit"
+              disabled={!canSend}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4 font-body text-[13px] tracking-wide uppercase transition-transform duration-300 disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:scale-[1.03]"
+              style={{ background: ACCENT, color: "#fff", fontWeight: 500 }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d={whatsappIcon} /></svg>
+              Send via WhatsApp
+            </button>
+            <a
+              href={canSend ? mailHref : undefined}
+              aria-disabled={!canSend}
+              onClick={(e) => { if (!canSend) e.preventDefault(); }}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 font-body text-[13px] tracking-wide uppercase transition-all duration-200"
+              style={{
+                border: "1px solid rgba(36,48,40,0.18)",
+                color: canSend ? "rgba(26,34,24,0.62)" : "rgba(26,34,24,0.3)",
+                cursor: canSend ? "pointer" : "not-allowed",
+              }}
+            >
+              <MailIcon />
+              Send via Email
+            </a>
+          </div>
+
+          <p className="text-center font-body text-[10.5px] mt-6" style={{ color: "rgba(26,34,24,0.35)" }}>
+            * Name and phone required. Nothing is sent to us until you press one of the buttons above.
+          </p>
+        </motion.form>
+      </Reveal>
+    </div>
+  );
+}
+
 export default function ContactPage() {
   const reduce = useReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
@@ -146,7 +718,6 @@ export default function ContactPage() {
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "18%"]);
   const imgScale = useTransform(scrollYProgress, [0, 1], [1, reduce ? 1 : 1.12]);
 
-  // hero mouse parallax (depth) — same technique used on the Farmstead hero
   const hmx = useMotionValue(0);
   const hmy = useMotionValue(0);
   const hsx = useSpring(hmx, { stiffness: 55, damping: 18 });
@@ -185,7 +756,6 @@ export default function ContactPage() {
         </motion.div>
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(8,14,10,0.25) 0%, rgba(8,14,10,0.1) 35%, rgba(8,14,10,0.9) 100%)" }} />
 
-        {/* drifting ghost word — depth cue matching the Farmstead hero */}
         <div className="absolute inset-0 flex items-center justify-end pr-4 md:pr-14 pointer-events-none overflow-hidden" aria-hidden>
           <motion.span
             className="italic select-none whitespace-nowrap"
@@ -249,9 +819,6 @@ export default function ContactPage() {
             </div>
           </Reveal>
 
-          {/* connecting thread between the two properties — unique to this
-              page, visually ties the "two homes, one family" idea to the
-              two cards sitting side by side */}
           <div aria-hidden className="hidden md:block absolute left-0 right-0 pointer-events-none" style={{ top: "18%" }}>
             <svg viewBox="0 0 100 6" preserveAspectRatio="none" className="w-full" style={{ height: "6px" }}>
               <line x1="0" y1="3" x2="100" y2="3" stroke={GOLD} strokeWidth="0.3" strokeDasharray="1.2 1.6" opacity="0.55" />
@@ -284,7 +851,6 @@ export default function ContactPage() {
               whileHover={{ y: -4 }}
               transition={{ type: "spring", stiffness: 220, damping: 26 }}
             >
-              {/* giant faint quote mark, the same motif your CTA bands use */}
               <span
                 aria-hidden
                 className="absolute select-none pointer-events-none italic"
@@ -293,7 +859,6 @@ export default function ContactPage() {
                 &rdquo;
               </span>
 
-              {/* gold corner brackets — the "engraved invitation" frame */}
               <span aria-hidden className="absolute top-5 left-5 w-6 h-6 pointer-events-none" style={{ borderTop: `1px solid ${GOLD}`, borderLeft: `1px solid ${GOLD}`, opacity: 0.7 }} />
               <span aria-hidden className="absolute bottom-5 right-5 w-6 h-6 pointer-events-none" style={{ borderBottom: `1px solid ${GOLD}`, borderRight: `1px solid ${GOLD}`, opacity: 0.7 }} />
 
@@ -324,10 +889,12 @@ export default function ContactPage() {
                     icon: <PhoneIcon />, label: "Call us",
                     content: (
                       <>
-                        <a href="tel:+916230645166" className="block font-body text-[15px] mb-1.5 transition-colors" style={{ color: "var(--color-ink)" }}
+                        <a href="tel:+916230645166" className="block font-body text-[15px] mb-1.5 transition-colors tabular-nums" style={{ color: "var(--color-ink)" }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = ACCENT; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--color-ink)"; }}>+91 62306 45166</a>
-                        <a href="tel:+919999975545" className="block font-body text-[15px] transition-colors" style={{ color: "var(--color-ink)" }}
+                        <a href="tel:+919999975545" className="block font-body text-[15px] mb-1.5 transition-colors tabular-nums" style={{ color: "var(--color-ink)" }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = ACCENT; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--color-ink)"; }}>+91 99999 75545</a>
+                        <a href="tel:+919138881116" className="block font-body text-[15px] transition-colors tabular-nums" style={{ color: "var(--color-ink)" }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = ACCENT; }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--color-ink)"; }}>+91 91388 81116</a>
                       </>
                     ),
                   },
@@ -374,6 +941,9 @@ export default function ContactPage() {
               </div>
             </motion.div>
           </Reveal>
+
+          {/* ══ ENQUIRY FORM ══ */}
+          <EnquiryForm />
         </div>
       </section>
 

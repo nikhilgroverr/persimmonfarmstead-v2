@@ -23,8 +23,8 @@ export const site = {
 
   phones: [
     { label: "+91 62306 45166", raw: "916230645166", role: "Reservations" },
-    { label: "+91 99999 75545", raw: "919999975545", role: "Reservations" },
     { label: "+91 91388 81116", raw: "919138881116", role: "Shanag Property" },
+    { label: "+91 99999 75545", raw: "919999975545", role: "Reservations" },
   ] satisfies Phone[],
 
   social: {
