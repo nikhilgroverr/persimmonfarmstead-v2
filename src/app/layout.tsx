@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   title: "Persimmon Farmstead | Elegant Holiday Stays",
   description:
     "A peaceful farmstead retreat with elegant rooms, warm hospitality, and countryside calm.",
+      icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

@@ -134,13 +134,13 @@ export const rooms: Room[] = [
     view: "Mountain, with sit-out",
     short:
       "A snug room with a lounge corner and French windows opening to the pine-clad slopes — pull a chair out for the morning sun.",
-    img: "/images/farmstead/rooms/balcony-mountain/1.webp",
+    img: "/images/farmstead/rooms/premium-room/pr3.webp",
     gallery: [
-      "/images/farmstead/rooms/balcony-mountain/1.webp",
-      "/images/farmstead/rooms/balcony-mountain/2.webp",
-      "/images/farmstead/rooms/balcony-mountain/3.webp",
-      "/images/farmstead/rooms/balcony-mountain/4.webp",
-      "/images/farmstead/rooms/balcony-mountain/5.webp",
+      "/images/farmstead/rooms/premium-room/pr1.webp",
+      "/images/farmstead/rooms/premium-room/pr2.webp",
+      "/images/farmstead/rooms/premium-room/pr3.webp",
+      "/images/farmstead/rooms/premium-room/pr4.webp",
+      "/images/farmstead/rooms/premium-room/pr5.webp",
     ],
     location: "Badgran (14 Mile)",
     body: [

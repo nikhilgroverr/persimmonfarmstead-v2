@@ -132,7 +132,7 @@ function AmenityRowFarmstead({ text, index, first }: { text: string; index: numb
 
 type Chapter = { n: string; kicker: string; title: string; body: string; meta: string; img: string; label: string };
 const chapters: Chapter[] = [
-  { n: "01", kicker: "The Beginning", title: "Two friends,\none lockdown.",
+  { n: "01", kicker: "The Beginning", title: "Two friends.",
     body: "Persimmon began with two friends from very different corporate worlds — the kind of jobs measured in flights and slide decks. The lockdowns handed them an unfamiliar stillness, and when the roads reopened they drove up to Manali and simply never left.",
     meta: "2021 · Where it started",
     img: "/images/farmstead/badagran/gallery-1.webp", label: "The Farmhouse" },
@@ -567,7 +567,7 @@ function OtherPropertyCard() {
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="group relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
-        <img src="https://images.unsplash.com/photo-1475483768296-6163e08872a1?w=1400&q=80" alt="Persimmon Farmstead Shanag"
+        <img src="/images/shanag/KIN01880.webp" alt="Persimmon Farmstead Shanag"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(26,34,24,0.15) 0%, transparent 40%)" }} />
       </div>
